@@ -10,7 +10,10 @@
     <nav class="top-nav">
         <a href="portfolio.html" class="nav-back" id="back-link">← ポートフォリオに戻る</a>
         <h1 id="admin-title" class="nav-title">🔐 管理画面</h1>
-        <button onclick="logout()" class="nav-logout">ログアウト</button>
+        <div class="nav-right">
+            <a href="categories.html" class="nav-categories" id="categories-link">📁 カテゴリー管理</a>
+            <button onclick="logout()" class="nav-logout">ログアウト</button>
+        </div>
     </nav>
 
     <!-- 認証画面 -->
@@ -37,13 +40,9 @@
                         <input type="text" name="title" required placeholder="プロジェクト名を入力" />
                     </div>
                     <div class="form-group">
-                        <label>プラットフォーム</label>
-                        <select name="platform">
-                            <option value="GAS">GAS</option>
-                            <option value="GitHub">GitHub</option>
-                            <option value="Vercel">Vercel</option>
-                            <option value="Netlify">Netlify</option>
-                            <option value="Other">その他</option>
+                        <label>カテゴリー</label>
+                        <select name="platform" id="platform-select">
+                            <!-- 動的に生成 -->
                         </select>
                     </div>
                 </div>
@@ -53,9 +52,17 @@
                     <textarea name="description" rows="3" placeholder="プロジェクトの説明を入力"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>URL *</label>
-                    <input type="url" name="url" required placeholder="https://example.com" />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>公開URL *</label>
+                        <input type="url" name="url" required placeholder="https://example.com" />
+                        <small class="form-hint">ユーザーがアクセスするURL</small>
+                    </div>
+                    <div class="form-group">
+                        <label>編集画面URL（任意）</label>
+                        <input type="url" name="editUrl" placeholder="https://script.google.com/..." />
+                        <small class="form-hint">管理者用の編集画面URL</small>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -101,13 +108,9 @@
                         <input type="text" id="edit-title" required />
                     </div>
                     <div class="form-group">
-                        <label>プラットフォーム</label>
+                        <label>カテゴリー</label>
                         <select id="edit-platform">
-                            <option value="GAS">GAS</option>
-                            <option value="GitHub">GitHub</option>
-                            <option value="Vercel">Vercel</option>
-                            <option value="Netlify">Netlify</option>
-                            <option value="Other">その他</option>
+                            <!-- 動的に生成 -->
                         </select>
                     </div>
                 </div>
@@ -117,9 +120,17 @@
                     <textarea id="edit-description" rows="3"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>URL *</label>
-                    <input type="url" id="edit-url" required />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>公開URL *</label>
+                        <input type="url" id="edit-url" required />
+                        <small class="form-hint">ユーザーがアクセスするURL</small>
+                    </div>
+                    <div class="form-group">
+                        <label>編集画面URL（任意）</label>
+                        <input type="url" id="edit-editUrl" placeholder="https://script.google.com/..." />
+                        <small class="form-hint">管理者用の編集画面URL</small>
+                    </div>
                 </div>
                 
                 <div class="form-group">

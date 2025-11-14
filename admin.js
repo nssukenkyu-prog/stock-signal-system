@@ -5,28 +5,34 @@ const currentBot = urlParams.get('bot') || 'yuzu';
 // LocalStorageキー
 const STORAGE_KEY = `portfolio_${currentBot}`;
 const AUTH_KEY = `auth_${currentBot}`;
+const CATEGORIES_KEY = `categories_${currentBot}`;
 
 // 簡易パスワード（本番環境では環境変数などを使用）
 const PASSWORDS = {
-    'yuzu': 'scc62625353',
-    'kedo': 'scc62625353'
+    'yuzu': 'yuzu2024',
+    'kedo': 'kedo2024'
 };
 
 // タイトル設定
 const botNames = {
-    'yuzu': '🍋 Yuzu bot - 管理画面',
-    'kedo': '🔥 Kedo bot - 管理画面'
+    'yuzu': '🍊 Yuzu bot - 管理画面',
+    'kedo': '🎯 Kedo bot - 管理画面'
 };
 document.getElementById('admin-title').textContent = botNames[currentBot];
 document.title = botNames[currentBot];
 document.getElementById('back-link').href = `portfolio.html?bot=${currentBot}`;
+document.getElementById('categories-link').href = `categories.html?bot=${currentBot}`;
 
 // 認証トークン
 let authToken = sessionStorage.getItem(AUTH_KEY);
 
+// カテゴリー
+let categories = [];
+
 // 初期化
 if (authToken) {
     showAdminContent();
+    loadCategories();
     loadAdminProjects();
 }
 
@@ -44,6 +50,7 @@ function authenticate() {
         authToken = password;
         sessionStorage.setItem(AUTH_KEY, authToken);
         showAdminContent();
+        loadCategories();
         loadAdminProjects();
         errorEl.textContent = '';
     } else {
@@ -61,6 +68,46 @@ function logout() {
     location.reload();
 }
 
+// カテゴリーを読み込み
+function loadCategories() {
+    const stored = localStorage.getItem(CATEGORIES_KEY);
+    
+    if (stored) {
+        categories = JSON.parse(stored);
+    } else {
+        // デフォルトカテゴリー
+        categories = [
+            { id: 'GAS', name: 'GAS', color: '#34A853' },
+            { id: 'GitHub', name: 'GitHub', color: '#24292e' },
+            { id: 'Cloudflare', name: 'Cloudflare', color: '#F38020' },
+            { id: 'Genspark', name: 'Genspark', color: '#6366f1' },
+            { id: 'Vercel', name: 'Vercel', color: '#000000' },
+            { id: 'Other', name: 'その他', color: '#64748b' }
+        ];
+    }
+    
+    renderCategorySelects();
+}
+
+// カテゴリーセレクトボックスを描画
+function renderCategorySelects() {
+    const platformSelect = document.getElementById('platform-select');
+    const editPlatformSelect = document.getElementById('edit-platform');
+    
+    const options = categories.map(cat => 
+        `<option value="${cat.id}">${cat.name}</option>`
+    ).join('');
+    
+    platformSelect.innerHTML = options;
+    editPlatformSelect.innerHTML = options;
+}
+
+// カテゴリー情報を取得
+function getCategoryInfo(platformId) {
+    const category = categories.find(c => c.id === platformId);
+    return category || { id: 'Other', name: 'その他', color: '#64748b' };
+}
+
 // プロジェクト一覧を読み込み
 function loadAdminProjects() {
     try {
@@ -76,6 +123,8 @@ function loadAdminProjects() {
 
         listEl.innerHTML = projects.map((project, index) => {
             const thumbnailUrl = convertGoogleDriveUrl(project.thumbnail);
+            const categoryInfo = getCategoryInfo(project.platform);
+            
             return `
             <div class="admin-item" data-id="${index}">
                 <div class="admin-item-thumbnail">
@@ -88,8 +137,22 @@ function loadAdminProjects() {
                     <h3>${project.title}</h3>
                     <p>${project.description || '説明なし'}</p>
                     <div class="meta">
-                        <span class="platform-badge">${project.platform || 'Other'}</span>
-                        <a href="${project.url}" target="_blank">${project.url}</a>
+                        <span class="platform-badge" style="background-color: ${categoryInfo.color}">${categoryInfo.name}</span>
+                        <a href="${project.url}" target="_blank" class="meta-link">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                            </svg>
+                            公開URL
+                        </a>
+                        ${project.editUrl ? `
+                            <a href="${project.editUrl}" target="_blank" class="meta-link meta-link-edit">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                </svg>
+                                編集画面
+                            </a>
+                        ` : ''}
                     </div>
                 </div>
                 <div class="admin-item-actions">
@@ -172,6 +235,7 @@ function openEditModal(index) {
     document.getElementById('edit-title').value = project.title;
     document.getElementById('edit-description').value = project.description || '';
     document.getElementById('edit-url').value = project.url;
+    document.getElementById('edit-editUrl').value = project.editUrl || '';
     document.getElementById('edit-platform').value = project.platform || 'Other';
     document.getElementById('edit-thumbnail').value = project.thumbnail || '';
     document.getElementById('edit-tags').value = project.tags || '';
@@ -198,6 +262,7 @@ document.getElementById('edit-form').addEventListener('submit', (e) => {
             title: document.getElementById('edit-title').value,
             description: document.getElementById('edit-description').value,
             url: document.getElementById('edit-url').value,
+            editUrl: document.getElementById('edit-editUrl').value,
             platform: document.getElementById('edit-platform').value,
             thumbnail: document.getElementById('edit-thumbnail').value,
             tags: document.getElementById('edit-tags').value

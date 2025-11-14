@@ -10,16 +10,15 @@
     <nav class="top-nav">
         <a href="index.html" class="nav-back">← ホームに戻る</a>
         <h1 id="portfolio-title" class="nav-title"></h1>
-        <a href="admin.html" class="nav-admin" id="admin-link">管理画面 →</a>
+        <div class="nav-right">
+            <a href="categories.html" class="nav-categories" id="categories-link">📁 カテゴリー管理</a>
+            <a href="admin.html" class="nav-admin" id="admin-link">🔐 管理画面</a>
+        </div>
     </nav>
 
     <div class="container">
-        <div class="filter-section">
-            <button class="filter-btn active" data-filter="all">すべて</button>
-            <button class="filter-btn" data-filter="GAS">GAS</button>
-            <button class="filter-btn" data-filter="GitHub">GitHub</button>
-            <button class="filter-btn" data-filter="Vercel">Vercel</button>
-            <button class="filter-btn" data-filter="Other">その他</button>
+        <div class="filter-section" id="filter-section">
+            <!-- カテゴリーボタンは動的に生成 -->
         </div>
 
         <div id="loading" class="loading">
@@ -34,26 +33,79 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentBot = urlParams.get('bot') || 'yuzu';
         let allProjects = [];
+        let categories = [];
 
         // タイトル設定
         const botNames = {
-            'yuzu': '🍋 Yuzu bot. Projects Portfolio',
-            'kedo': '🔥 Kedo bot. Projects Portfolio'
+            'yuzu': '🍊 Yuzu bot. Projects Portfolio',
+            'kedo': '🎯 Kedo bot. Projects Portfolio'
         };
         document.getElementById('portfolio-title').textContent = botNames[currentBot];
         document.title = botNames[currentBot];
 
-        // 管理画面リンクにbot情報を付与
+        // リンクにbot情報を付与
         document.getElementById('admin-link').href = `admin.html?bot=${currentBot}`;
+        document.getElementById('categories-link').href = `categories.html?bot=${currentBot}`;
 
-        // プロジェクト一覧を取得（GitHub Issuesから）
+        // カテゴリーを読み込み
+        function loadCategories() {
+            const storageKey = `categories_${currentBot}`;
+            const stored = localStorage.getItem(storageKey);
+            
+            if (stored) {
+                categories = JSON.parse(stored);
+            } else {
+                // デフォルトカテゴリー
+                categories = [
+                    { id: 'GAS', name: 'GAS', color: '#34A853' },
+                    { id: 'GitHub', name: 'GitHub', color: '#24292e' },
+                    { id: 'Cloudflare', name: 'Cloudflare', color: '#F38020' },
+                    { id: 'Genspark', name: 'Genspark', color: '#6366f1' },
+                    { id: 'Vercel', name: 'Vercel', color: '#000000' },
+                    { id: 'Other', name: 'その他', color: '#64748b' }
+                ];
+                localStorage.setItem(storageKey, JSON.stringify(categories));
+            }
+            
+            renderFilterButtons();
+        }
+
+        // フィルターボタンを描画
+        function renderFilterButtons() {
+            const filterSection = document.getElementById('filter-section');
+            
+            let buttons = '<button class="filter-btn active" data-filter="all">すべて</button>';
+            categories.forEach(cat => {
+                buttons += `<button class="filter-btn" data-filter="${cat.id}" style="--category-color: ${cat.color}">${cat.name}</button>`;
+            });
+            
+            filterSection.innerHTML = buttons;
+            
+            // イベントリスナーを再設定
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filter = btn.dataset.filter;
+                    
+                    if (filter === 'all') {
+                        displayProjects(allProjects);
+                    } else {
+                        const filtered = allProjects.filter(p => p.platform === filter);
+                        displayProjects(filtered);
+                    }
+                });
+            });
+        }
+
+        // プロジェクト一覧を取得
         async function loadProjects() {
             const loading = document.getElementById('loading');
             const grid = document.getElementById('projects-grid');
             const errorDiv = document.getElementById('error');
 
             try {
-                // LocalStorageからプロジェクトを読み込み
                 const storageKey = `portfolio_${currentBot}`;
                 const stored = localStorage.getItem(storageKey);
                 
@@ -72,29 +124,31 @@
             }
         }
 
-        // Google Drive画像URLを直接表示可能な形式に変換
+        // Google Drive画像URLを変換
         function convertGoogleDriveUrl(url) {
             if (!url) return '';
             
-            // Google Drive共有リンクの場合
             const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (driveMatch) {
                 return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
             }
             
-            // すでにthumbnail形式の場合
             if (url.includes('drive.google.com/thumbnail')) {
                 return url;
             }
             
-            // id=パラメータがある場合
             const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
             if (idMatch) {
                 return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w800`;
             }
             
-            // その他のURL
             return url;
+        }
+
+        // カテゴリー情報を取得
+        function getCategoryInfo(platformId) {
+            const category = categories.find(c => c.id === platformId);
+            return category || { id: 'Other', name: 'その他', color: '#64748b' };
         }
 
         // プロジェクトを表示
@@ -108,6 +162,8 @@
 
             grid.innerHTML = projects.map(project => {
                 const thumbnailUrl = convertGoogleDriveUrl(project.thumbnail);
+                const categoryInfo = getCategoryInfo(project.platform);
+                
                 return `
                 <div class="project-card" data-platform="${project.platform || 'Other'}">
                     <div class="project-thumbnail">
@@ -116,7 +172,7 @@
                             : `<div class="thumbnail-placeholder">📄</div>`
                         }
                         <div class="thumbnail-overlay">
-                            <span class="platform-badge">${project.platform || 'Other'}</span>
+                            <span class="platform-badge" style="background-color: ${categoryInfo.color}">${categoryInfo.name}</span>
                         </div>
                     </div>
                     <div class="project-content">
@@ -129,36 +185,30 @@
                                 ).join('')}
                             </div>
                         ` : ''}
-                        <a href="${project.url}" target="_blank" class="project-link">
-                            <span>サイトを開く</span>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                                <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                            </svg>
-                        </a>
+                        <div class="project-links">
+                            <a href="${project.url}" target="_blank" class="project-link project-link-view">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                    <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                                </svg>
+                                <span>サイトを開く</span>
+                            </a>
+                            ${project.editUrl ? `
+                                <a href="${project.editUrl}" target="_blank" class="project-link project-link-edit">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
+                                    <span>編集画面</span>
+                                </a>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `}).join('');
         }
 
-        // フィルター機能
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const filter = btn.dataset.filter;
-                
-                if (filter === 'all') {
-                    displayProjects(allProjects);
-                } else {
-                    const filtered = allProjects.filter(p => p.platform === filter);
-                    displayProjects(filtered);
-                }
-            });
-        });
-
         // ページ読み込み時に実行
+        loadCategories();
         loadProjects();
     </script>
 </body>
