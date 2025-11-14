@@ -14,8 +14,8 @@ const PASSWORDS = {
 
 // タイトル設定
 const botNames = {
-    'yuzu': '🍊 Yuzu bot - 管理画面',
-    'kedo': '🎯 Kedo bot - 管理画面'
+    'yuzu': '🍋 Yuzu bot - 管理画面',
+    'kedo': '🔥 Kedo bot - 管理画面'
 };
 document.getElementById('admin-title').textContent = botNames[currentBot];
 document.title = botNames[currentBot];
