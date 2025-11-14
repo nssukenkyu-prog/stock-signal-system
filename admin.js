@@ -8,8 +8,8 @@ const AUTH_KEY = `auth_${currentBot}`;
 
 // 簡易パスワード（本番環境では環境変数などを使用）
 const PASSWORDS = {
-    'yuzu': 'yuzu2024',
-    'kedo': 'kedo2024'
+    'yuzu': 'scc62625353',
+    'kedo': 'scc62625353'
 };
 
 // タイトル設定
