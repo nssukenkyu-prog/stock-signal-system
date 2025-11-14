@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理画面 - Portfolio Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-page">
+    <nav class="top-nav">
+        <a href="portfolio.html" class="nav-back" id="back-link">← ポートフォリオに戻る</a>
+        <h1 id="admin-title" class="nav-title">🔐 管理画面</h1>
+        <button onclick="logout()" class="nav-logout">ログアウト</button>
+    </nav>
+
+    <!-- 認証画面 -->
+    <div id="auth-section" class="auth-section">
+        <div class="auth-card">
+            <div class="auth-icon">🔒</div>
+            <h2>管理者認証</h2>
+            <p class="auth-subtitle">パスワードを入力してください</p>
+            <input type="password" id="password-input" placeholder="パスワード" />
+            <button onclick="authenticate()" class="btn-primary">ログイン</button>
+            <p id="auth-error" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- 管理コンテンツ -->
+    <div id="admin-content" class="container" style="display: none;">
+        <!-- 新規追加フォーム -->
+        <div class="admin-panel">
+            <h2>✨ 新しいプロジェクトを追加</h2>
+            <form id="add-form" class="project-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>タイトル *</label>
+                        <input type="text" name="title" required placeholder="プロジェクト名を入力" />
+                    </div>
+                    <div class="form-group">
+                        <label>プラットフォーム</label>
+                        <select name="platform">
+                            <option value="GAS">GAS</option>
+                            <option value="GitHub">GitHub</option>
+                            <option value="Vercel">Vercel</option>
+                            <option value="Netlify">Netlify</option>
+                            <option value="Other">その他</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>説明</label>
+                    <textarea name="description" rows="3" placeholder="プロジェクトの説明を入力"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>URL *</label>
+                    <input type="url" name="url" required placeholder="https://example.com" />
+                </div>
+                
+                <div class="form-group">
+                    <label>サムネイル画像URL（Google Drive推奨）</label>
+                    <input type="url" name="thumbnail" placeholder="Google Driveの共有リンクまたは画像URL" />
+                    <small class="form-hint">💡 Google Driveの場合: 「共有」→「リンクを知っている全員」→ リンクをコピー</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>タグ（カンマ区切り）</label>
+                    <input type="text" name="tags" placeholder="例: React, TypeScript, API" />
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <span>追加する</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- プロジェクト一覧 -->
+        <div class="admin-panel">
+            <h2>📋 登録済みプロジェクト</h2>
+            <div id="admin-projects-list" class="admin-list"></div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ プロジェクトを編集</h2>
+                <button onclick="closeEditModal()" class="modal-close">×</button>
+            </div>
+            <form id="edit-form" class="project-form">
+                <input type="hidden" id="edit-id" />
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>タイトル *</label>
+                        <input type="text" id="edit-title" required />
+                    </div>
+                    <div class="form-group">
+                        <label>プラットフォーム</label>
+                        <select id="edit-platform">
+                            <option value="GAS">GAS</option>
+                            <option value="GitHub">GitHub</option>
+                            <option value="Vercel">Vercel</option>
+                            <option value="Netlify">Netlify</option>
+                            <option value="Other">その他</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>説明</label>
+                    <textarea id="edit-description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>URL *</label>
+                    <input type="url" id="edit-url" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>サムネイル画像URL（Google Drive推奨）</label>
+                    <input type="url" id="edit-thumbnail" placeholder="Google Driveの共有リンクまたは画像URL" />
+                    <small class="form-hint">💡 Google Driveの場合: 「共有」→「リンクを知っている全員」→ リンクをコピー</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>タグ（カンマ区切り）</label>
+                    <input type="text" id="edit-tags" />
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeEditModal()" class="btn-secondary">キャンセル</button>
+                    <button type="submit" class="btn-primary">更新する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

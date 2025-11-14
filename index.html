@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Portfolio Hub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="hero-container">
+        <div class="animated-bg"></div>
+        <header class="hero-header">
+            <h1 class="hero-title">🤖 Bot Projects Portfolio</h1>
+            <p class="hero-subtitle">プロジェクトポートフォリオを選択してください</p>
+        </header>
+
+        <div class="portfolio-selector">
+            <div class="portfolio-card" onclick="selectPortfolio('yuzu')">
+                <div class="card-icon">🍊</div>
+                <h2>Yuzu bot.</h2>
+                <p>Yuzu botのプロジェクト一覧</p>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="portfolio-card" onclick="selectPortfolio('kedo')">
+                <div class="card-icon">🎯</div>
+                <h2>Kedo bot.</h2>
+                <p>Kedo botのプロジェクト一覧</p>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+
+        <footer class="hero-footer">
+            <p>どちらかのポートフォリオを選択して、プロジェクトを閲覧・管理できます</p>
+        </footer>
+    </div>
+
+    <script>
+        function selectPortfolio(bot) {
+            // ポートフォリオページに遷移
+            window.location.href = `portfolio.html?bot=${bot}`;
+        }
+
+        // アニメーション効果
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.portfolio-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 150);
+            });
+        });
+    </script>
+</body>
+</html>

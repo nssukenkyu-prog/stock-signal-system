@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Projects</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="portfolio-page">
+    <nav class="top-nav">
+        <a href="index.html" class="nav-back">← ホームに戻る</a>
+        <h1 id="portfolio-title" class="nav-title"></h1>
+        <a href="admin.html" class="nav-admin" id="admin-link">管理画面 →</a>
+    </nav>
+
+    <div class="container">
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">すべて</button>
+            <button class="filter-btn" data-filter="GAS">GAS</button>
+            <button class="filter-btn" data-filter="GitHub">GitHub</button>
+            <button class="filter-btn" data-filter="Vercel">Vercel</button>
+            <button class="filter-btn" data-filter="Other">その他</button>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>読み込み中...</p>
+        </div>
+        <div id="projects-grid" class="projects-grid"></div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentBot = urlParams.get('bot') || 'yuzu';
+        let allProjects = [];
+
+        // タイトル設定
+        const botNames = {
+            'yuzu': '🍊 Yuzu bot. Projects Portfolio',
+            'kedo': '🎯 Kedo bot. Projects Portfolio'
+        };
+        document.getElementById('portfolio-title').textContent = botNames[currentBot];
+        document.title = botNames[currentBot];
+
+        // 管理画面リンクにbot情報を付与
+        document.getElementById('admin-link').href = `admin.html?bot=${currentBot}`;
+
+        // プロジェクト一覧を取得（GitHub Issuesから）
+        async function loadProjects() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('projects-grid');
+            const errorDiv = document.getElementById('error');
+
+            try {
+                // LocalStorageからプロジェクトを読み込み
+                const storageKey = `portfolio_${currentBot}`;
+                const stored = localStorage.getItem(storageKey);
+                
+                if (stored) {
+                    allProjects = JSON.parse(stored);
+                } else {
+                    allProjects = [];
+                }
+                
+                loading.style.display = 'none';
+                displayProjects(allProjects);
+            } catch (error) {
+                loading.style.display = 'none';
+                errorDiv.textContent = 'プロジェクトの読み込みに失敗しました: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Google Drive画像URLを直接表示可能な形式に変換
+        function convertGoogleDriveUrl(url) {
+            if (!url) return '';
+            
+            // Google Drive共有リンクの場合
+            const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (driveMatch) {
+                return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
+            }
+            
+            // すでにthumbnail形式の場合
+            if (url.includes('drive.google.com/thumbnail')) {
+                return url;
+            }
+            
+            // id=パラメータがある場合
+            const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (idMatch) {
+                return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w800`;
+            }
+            
+            // その他のURL
+            return url;
+        }
+
+        // プロジェクトを表示
+        function displayProjects(projects) {
+            const grid = document.getElementById('projects-grid');
+            
+            if (projects.length === 0) {
+                grid.innerHTML = '<div class="no-projects"><p>まだプロジェクトがありません</p><a href="admin.html?bot=' + currentBot + '" class="btn-primary">最初のプロジェクトを追加</a></div>';
+                return;
+            }
+
+            grid.innerHTML = projects.map(project => {
+                const thumbnailUrl = convertGoogleDriveUrl(project.thumbnail);
+                return `
+                <div class="project-card" data-platform="${project.platform || 'Other'}">
+                    <div class="project-thumbnail">
+                        ${thumbnailUrl 
+                            ? `<img src="${thumbnailUrl}" alt="${project.title}" onerror="this.parentElement.innerHTML='<div class=\\'thumbnail-placeholder\\'>📄</div>'">`
+                            : `<div class="thumbnail-placeholder">📄</div>`
+                        }
+                        <div class="thumbnail-overlay">
+                            <span class="platform-badge">${project.platform || 'Other'}</span>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3>${project.title}</h3>
+                        <p class="project-description">${project.description || '説明なし'}</p>
+                        ${project.tags ? `
+                            <div class="project-tags">
+                                ${project.tags.split(',').map(tag => 
+                                    `<span class="tag">${tag.trim()}</span>`
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                        <a href="${project.url}" target="_blank" class="project-link">
+                            <span>サイトを開く</span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // フィルター機能
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filter = btn.dataset.filter;
+                
+                if (filter === 'all') {
+                    displayProjects(allProjects);
+                } else {
+                    const filtered = allProjects.filter(p => p.platform === filter);
+                    displayProjects(filtered);
+                }
+            });
+        });
+
+        // ページ読み込み時に実行
+        loadProjects();
+    </script>
+</body>
+</html>
