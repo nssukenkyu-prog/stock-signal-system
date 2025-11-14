@@ -7,8 +7,8 @@ const CATEGORIES_KEY = `categories_${currentBot}`;
 
 // タイトル設定
 const botNames = {
-    'yuzu': '🍊 Yuzu bot - カテゴリー管理',
-    'kedo': '🎯 Kedo bot - カテゴリー管理'
+    'yuzu': '🚴‍♂️ Yuzu bot - カテゴリー管理',
+    'kedo': '🔥 Kedo bot - カテゴリー管理'
 };
 document.getElementById('categories-title').textContent = botNames[currentBot];
 document.title = botNames[currentBot];
