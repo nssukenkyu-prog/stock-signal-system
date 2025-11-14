@@ -9,14 +9,14 @@ const CATEGORIES_KEY = `categories_${currentBot}`;
 
 // 簡易パスワード（本番環境では環境変数などを使用）
 const PASSWORDS = {
-    'yuzu': 'yuzu2024',
-    'kedo': 'kedo2024'
+    'yuzu': 'scc62625353',
+    'kedo': 'scc62625353'
 };
 
 // タイトル設定
 const botNames = {
-    'yuzu': '🍊 Yuzu bot - 管理画面',
-    'kedo': '🎯 Kedo bot - 管理画面'
+    'yuzu': '🚴‍♂️ Yuzu bot - 管理画面',
+    'kedo': '🔥 Kedo bot - 管理画面'
 };
 document.getElementById('admin-title').textContent = botNames[currentBot];
 document.title = botNames[currentBot];
