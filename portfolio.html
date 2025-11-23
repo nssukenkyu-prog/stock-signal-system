@@ -106,7 +106,7 @@
             displayProjects(catId);
         };
 
-        // プロジェクトリスト表示（デザインを以前の形式に戻す）
+        // プロジェクトリスト表示（横長リストデザイン）
         function displayProjects(filterCatId) {
             const grid = document.getElementById('projects-grid');
             
@@ -125,42 +125,45 @@
 
                 return `
                 <div class="project-card">
-                    <div class="project-header-top">
-                        <span class="creator-badge">👤 ${p.creator}</span>
-                    </div>
-
-                    <div class="project-body">
-                        <div class="project-left-col">
-                            <div class="doc-icon">📄</div>
-                            <span class="platform-badge" style="background-color: ${platform.color}">${platform.name}</span>
-                        </div>
-
-                        <div class="project-content">
-                            <h3>${p.title}</h3>
-                            <p class="project-description">${p.description || ''}</p>
-                        </div>
-                    </div>
-
-                    <div class="project-footer">
-                        <div class="project-links">
-                            ${hasLink ? `
-                                <a href="${p.url}" target="_blank" class="project-link project-link-view">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
-                                    サイトを開く
-                                </a>
-                            ` : `
-                                <span class="project-link disabled" style="font-size:0.9rem; color:#94a3b8;">
-                                    リンクなし
-                                </span>
-                            `}
-                            ${p.editUrl ? `<a href="${p.editUrl}" target="_blank" class="project-link project-link-edit" style="font-size:0.9rem">編集</a>` : ''}
-                        </div>
-                        
-                        ${p.tags ? `
-                            <div class="project-tags">
-                                ${p.tags.split(',').map(t => `<span class="tag">${t.trim()}</span>`).join('')}
+                    <div class="project-card-inner">
+                        <div class="project-main-content">
+                            <div class="project-header">
+                                <span class="creator-badge">👤 ${p.creator}</span>
+                                <h3>${p.title}</h3>
                             </div>
-                        ` : ''}
+                            
+                            <div class="project-body-row">
+                                <div class="project-platform-area">
+                                    <div class="doc-icon">📄</div>
+                                    <span class="platform-badge" style="background-color: ${platform.color}">${platform.name}</span>
+                                </div>
+                                
+                                <p class="project-description">${p.description || ''}</p>
+                            </div>
+
+                            <div class="project-links-area">
+                                ${hasLink ? `
+                                    <a href="${p.url}" target="_blank" class="project-link">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
+                                        サイトを開く
+                                    </a>
+                                ` : `
+                                    <span class="project-link disabled">リンクなし</span>
+                                `}
+                                ${p.editUrl ? `<a href="${p.editUrl}" target="_blank" class="project-link-edit">編集</a>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="project-side-content">
+                            <div class="thumbnail-placeholder-side">
+                                📄
+                            </div>
+                            ${p.tags ? `
+                                <div class="project-tags">
+                                    ${p.tags.split(',').map(t => `<span class="tag">${t.trim()}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>`;
             }).join('');
