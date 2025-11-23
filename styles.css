@@ -703,3 +703,31 @@ body {
         padding: 2rem;
     }
 }
+/* ===== ドラッグ＆ドロップ並び替え用 ===== */
+.admin-item {
+    cursor: grab; /* 掴めるカーソル */
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.admin-item:active {
+    cursor: grabbing; /* 掴んでいる最中 */
+}
+
+/* ドラッグ中の要素 */
+.admin-item.dragging {
+    opacity: 0.5;
+    background: #f3f4f6;
+    border: 2px dashed var(--primary-color);
+}
+
+/* ドロップ先の目印 */
+.admin-item.drag-over {
+    border-top: 3px solid var(--primary-color);
+}
+
+/* 順序保存ボタンエリア */
+.save-order-area {
+    margin-bottom: 1rem;
+    text-align: right;
+    display: none; /* 変更があったら表示 */
+}
