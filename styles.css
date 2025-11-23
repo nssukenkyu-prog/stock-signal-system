@@ -1108,32 +1108,49 @@ body {
     }
 }
 
-/* ===== 追記・修正分 ===== */
+/* ===== 追記・修正分（ここを上書きしてください） ===== */
 
-/* フィルターボタン（カテゴリー） - グラデーション背景用に見やすく調整 */
-.filter-section .filter-btn {
-    margin-bottom: 0.5rem;
-    /* 非アクティブ時は、半透明の白背景＋白文字でスッキリと */
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white !important; /* 強制的に白文字にする */
-    backdrop-filter: blur(5px); /* すりガラス効果 */
+/* フィルターセクション全体 */
+.filter-section {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
 }
 
-.filter-section .filter-btn:hover {
+/* フィルターボタン（未選択の状態） */
+.filter-btn {
+    padding: 0.7rem 1.8rem;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    
+    /* ここが修正ポイント：半透明の白背景 + 白文字 */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff !important; /* 強制的に白文字にする */
+    backdrop-filter: blur(5px);
+}
+
+/* ホバー時 */
+.filter-btn:hover {
     background: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
 }
 
-.filter-section .filter-btn.active {
-    /* アクティブ時は、白背景＋濃い青文字ではっきりと強調 */
-    background: white !important;
-    color: var(--primary-dark) !important; /* 濃い青色 */
-    border-color: white !important;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+/* 選択中のボタン（アクティブ） */
+.filter-btn.active {
+    /* ここが修正ポイント：白背景 + 濃い青文字 */
+    background: #ffffff !important;
+    color: #4f46e5 !important; /* 濃い色にして見えるようにする */
+    border-color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* プロジェクトカード拡張 */
+/* プロジェクトカード拡張などはそのままでOK */
 .project-meta {
     display: flex;
     justify-content: space-between;
@@ -1153,7 +1170,6 @@ body {
     gap: 4px;
 }
 
-/* リンクなしボタン（無効化状態） */
 .project-link.disabled {
     color: #cbd5e1;
     cursor: not-allowed;
@@ -1187,7 +1203,7 @@ body {
 .tab-btn.active::after {
     content: '';
     position: absolute;
-    bottom: -1rem; /* admin-tabsのpaddingと合わせる */
+    bottom: -1rem;
     left: 0;
     width: 100%;
     height: 3px;
