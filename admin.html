@@ -40,65 +40,64 @@
             <div class="admin-panel">
                 <h2>✨ プロジェクト追加</h2>
                 <form id="add-project-form" class="project-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>タイトル *</label>
-                            <input type="text" name="title" required />
-                        </div>
-                        <div class="form-group">
-                            <label>作成者 *</label>
-                            <input type="text" name="creator" placeholder="例: Yuzu bot" required list="creators-list"/>
-                            <datalist id="creators-list">
-                                <option value="Yuzu bot">
-                                <option value="Kedo bot">
-                            </datalist>
-                        </div>
-                    </div>
+    <input type="hidden" name="docId" id="edit-doc-id">
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>メインカテゴリー *</label>
-                            <select name="categoryId" id="project-category-select" required>
-                                <option value="">選択してください</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>プラットフォーム (サブ) *</label>
-                            <select name="platformId" id="project-platform-select" required>
-                                <option value="">選択してください</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>説明</label>
-                        <textarea name="description" rows="3"></textarea>
-                    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>タイトル *</label>
+            <input type="text" name="title" id="input-title" required />
+        </div>
+        <div class="form-group">
+            <label>作成者 *</label>
+            <input type="text" name="creator" id="input-creator" required list="creators-list"/>
+            <datalist id="creators-list">
+                <option value="Yuzu bot">
+                <option value="Kedo bot">
+            </datalist>
+        </div>
+    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>公開URL (空欄可)</label>
-                            <input type="url" name="url" placeholder="https://..." />
-                            <small class="form-hint">※GASなどでリンクがない場合は空欄にしてください</small>
-                        </div>
-                        <div class="form-group">
-                            <label>編集URL (任意)</label>
-                            <input type="url" name="editUrl" />
-                        </div>
-                    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>メインカテゴリー *</label>
+            <select name="categoryId" id="project-category-select" required>
+                <option value="">選択してください</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>プラットフォーム (サブ) *</label>
+            <select name="platformId" id="project-platform-select" required>
+                <option value="">選択してください</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>説明</label>
+        <textarea name="description" id="input-description" rows="2"></textarea>
+    </div>
 
-                    <div class="form-group">
-                        <label>サムネイル画像URL</label>
-                        <input type="url" name="thumbnail" />
-                    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>公開URL (空欄可)</label>
+            <input type="url" name="url" id="input-url" placeholder="https://..." />
+        </div>
+        <div class="form-group">
+            <label>編集URL (任意)</label>
+            <input type="url" name="editUrl" id="input-editUrl" />
+        </div>
+    </div>
 
-                    <div class="form-group">
-                        <label>タグ (カンマ区切り)</label>
-                        <input type="text" name="tags" />
-                    </div>
+    <div class="form-group">
+        <label>タグ (カンマ区切り)</label>
+        <input type="text" name="tags" id="input-tags" />
+    </div>
 
-                    <button type="submit" class="btn-primary">プロジェクトを追加</button>
-                </form>
+    <div style="display: flex; gap: 1rem;">
+        <button type="submit" class="btn-primary" id="submit-btn">プロジェクトを追加</button>
+        <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;" onclick="resetForm()">キャンセル</button>
+    </div>
+</form>
             </div>
             
             <div class="admin-panel">
