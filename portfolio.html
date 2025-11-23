@@ -10,14 +10,7 @@
     <nav class="top-nav">
         <a href="index.html" class="nav-back">← ホームに戻る</a>
         <h1 id="portfolio-title" class="nav-title"></h1>
-        <div class="nav-right">
-            <a href="https://github.com/nssukenkyu-prog/YOUR_REPO_NAME/tree/main/data" target="_blank" class="nav-admin" id="github-edit-link">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right:5px; vertical-align: text-bottom;">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-                データを編集
-            </a>
-        </div>
+        <div class="nav-right"></div>
     </nav>
 
     <div class="container">
@@ -26,84 +19,74 @@
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p>データを読み込んでいます...</p>
+            <p>Firebaseからデータを取得中...</p>
         </div>
         <div id="projects-grid" class="projects-grid"></div>
         <div id="error" class="error" style="display: none;"></div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ■■■ Firebase設定エリア (ここを書き換えてください) ■■■
+        const firebaseConfig = {
+  apiKey: "AIzaSyDQuSOlOynAMMtBhBNBoGNHToN6QL-qkX4",
+  authDomain: "portfolio-db-5df49.firebaseapp.com",
+  projectId: "portfolio-db-5df49",
+  storageBucket: "portfolio-db-5df49.firebasestorage.app",
+  messagingSenderId: "587043981242",
+  appId: "1:587043981242:web:e74d3edb165569f0913f83",
+  measurementId: "G-RDGM3YC3G4"
+};
+        // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // URLパラメータからbot情報を取得
         const urlParams = new URLSearchParams(window.location.search);
         const currentBot = urlParams.get('bot') || 'yuzu';
+        
         let allProjects = [];
-        let categories = [];
 
         // タイトル設定
         const botNames = {
             'yuzu': '🚴‍♂️ Yuzu bot. Projects Portfolio',
             'kedo': '🔥 Kedo bot. Projects Portfolio'
         };
-        
-        // タイトル反映
         const titleElement = document.getElementById('portfolio-title');
         if (titleElement) {
             titleElement.textContent = botNames[currentBot] || `${currentBot} Portfolio`;
         }
         document.title = botNames[currentBot] || 'Portfolio';
 
-        // GitHub編集リンクの調整（リポジトリURLが確定したら書き換えてください）
-        // ここでは bot によって飛ぶファイルを変える例です
-        const editLink = document.getElementById('github-edit-link');
-        // editLink.href = `https://github.com/[あなたのユーザー名]/[リポジトリ名]/blob/main/data/projects_${currentBot}.json`; 
-
-        // カテゴリーをJSONファイルから読み込み
-        async function loadCategories() {
-            try {
-                // キャッシュ対策のためにタイムスタンプを付与
-                const response = await fetch(`data/categories_${currentBot}.json?t=${new Date().getTime()}`);
-                
-                if (response.ok) {
-                    categories = await response.json();
-                } else {
-                    console.warn('カテゴリーファイルが見つかりません。デフォルトを使用します。');
-                    // ファイルがない場合のデフォルト
-                    categories = [
-                        { id: 'GAS', name: 'GAS', color: '#34A853' },
-                        { id: 'GitHub', name: 'GitHub', color: '#24292e' },
-                        { id: 'Cloudflare', name: 'Cloudflare', color: '#F38020' },
-                        { id: 'Genspark', name: 'Genspark', color: '#6366f1' },
-                        { id: 'Vercel', name: 'Vercel', color: '#000000' },
-                        { id: 'Other', name: 'その他', color: '#64748b' }
-                    ];
-                }
-                renderFilterButtons();
-            } catch (e) {
-                console.error('カテゴリー読み込みエラー:', e);
-                // エラー時もデフォルトを表示して続行
-                categories = [
-                        { id: 'Other', name: 'All', color: '#64748b' }
-                ];
-                renderFilterButtons();
-            }
-        }
+        // 定義済みカテゴリー（Firebaseから取得も可能ですが、固定の方が高速です）
+        const categories = [
+            { id: 'GAS', name: 'GAS', color: '#34A853' },
+            { id: 'GitHub', name: 'GitHub', color: '#24292e' },
+            { id: 'Cloudflare', name: 'Cloudflare', color: '#F38020' },
+            { id: 'Genspark', name: 'Genspark', color: '#6366f1' },
+            { id: 'Vercel', name: 'Vercel', color: '#000000' },
+            { id: 'Other', name: 'その他', color: '#64748b' }
+        ];
 
         // フィルターボタンを描画
         function renderFilterButtons() {
             const filterSection = document.getElementById('filter-section');
-            
             let buttons = '<button class="filter-btn active" data-filter="all">すべて</button>';
             categories.forEach(cat => {
                 buttons += `<button class="filter-btn" data-filter="${cat.id}" style="--category-color: ${cat.color}">${cat.name}</button>`;
             });
-            
             filterSection.innerHTML = buttons;
-            
-            // イベントリスナーを再設定
+
+            // イベント設定
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-
                     const filter = btn.dataset.filter;
                     
                     if (filter === 'all') {
@@ -116,69 +99,63 @@
             });
         }
 
-        // プロジェクト一覧をJSONファイルから取得
+        // データ取得メイン関数
         async function loadProjects() {
             const loading = document.getElementById('loading');
-            const grid = document.getElementById('projects-grid');
             const errorDiv = document.getElementById('error');
 
             try {
-                // projects_yuzu.json または projects_kedo.json を読み込む
-                const response = await fetch(`data/projects_${currentBot}.json?t=${new Date().getTime()}`);
-                
-                if (!response.ok) {
-                    throw new Error(`データファイル(projects_${currentBot}.json)が見つかりません。GitHubのdataフォルダを確認してください。`);
-                }
+                // projectsコレクションから、botフィールドが一致するものを取得
+                // ※ orderByを使う場合、Firestore側でインデックス作成が必要になる場合がありますが、まずは単純取得で
+                const q = query(
+                    collection(db, "projects"), 
+                    where("bot", "==", currentBot)
+                );
 
-                allProjects = await response.json();
+                const querySnapshot = await getDocs(q);
                 
+                allProjects = [];
+                querySnapshot.forEach((doc) => {
+                    // データを整形して配列に追加
+                    const data = doc.data();
+                    allProjects.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
                 loading.style.display = 'none';
+                renderFilterButtons();
                 displayProjects(allProjects);
+
             } catch (error) {
+                console.error("Error getting documents: ", error);
                 loading.style.display = 'none';
-                errorDiv.innerHTML = `
-                    <p>❌ プロジェクトの読み込みに失敗しました</p>
-                    <p class="error-detail">${error.message}</p>
-                    <p class="error-hint">管理者の方へ: dataフォルダに projects_${currentBot}.json が存在するか確認してください。</p>
-                `;
+                errorDiv.innerHTML = `<p>エラーが発生しました: ${error.message}</p>`;
                 errorDiv.style.display = 'block';
-                console.error(error);
             }
         }
 
-        // Google Drive画像URLを変換
+        // 画像URL変換
         function convertGoogleDriveUrl(url) {
             if (!url) return '';
-            
             const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-            if (driveMatch) {
-                return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
-            }
-            
-            if (url.includes('drive.google.com/thumbnail')) {
-                return url;
-            }
-            
+            if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
             const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (idMatch) {
-                return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w800`;
-            }
-            
+            if (idMatch) return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w800`;
             return url;
         }
 
-        // カテゴリー情報を取得
         function getCategoryInfo(platformId) {
-            const category = categories.find(c => c.id === platformId);
-            return category || { id: 'Other', name: 'その他', color: '#64748b' };
+            return categories.find(c => c.id === platformId) || { id: 'Other', name: 'その他', color: '#64748b' };
         }
 
-        // プロジェクトを表示
+        // 表示関数
         function displayProjects(projects) {
             const grid = document.getElementById('projects-grid');
             
             if (!projects || projects.length === 0) {
-                grid.innerHTML = '<div class="no-projects"><p>プロジェクトデータがありません。</p></div>';
+                grid.innerHTML = '<div class="no-projects"><p>プロジェクトがまだありません。</p></div>';
                 return;
             }
 
@@ -202,9 +179,7 @@
                         <p class="project-description">${project.description || '説明なし'}</p>
                         ${project.tags ? `
                             <div class="project-tags">
-                                ${project.tags.split(',').map(tag => 
-                                    `<span class="tag">${tag.trim()}</span>`
-                                ).join('')}
+                                ${project.tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('')}
                             </div>
                         ` : ''}
                         <div class="project-links">
@@ -229,9 +204,8 @@
             `}).join('');
         }
 
-        // ページ読み込み時に実行
-        // 並列で読み込むと速いです
-        Promise.all([loadCategories(), loadProjects()]);
+        // 実行
+        loadProjects();
     </script>
 </body>
 </html>
