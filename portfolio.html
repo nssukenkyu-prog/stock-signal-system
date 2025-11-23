@@ -18,11 +18,8 @@
                 <button type="submit" class="btn-primary" style="width:100%">解除する</button>
             </form>
             <p id="lock-error" class="lock-error"></p>
-
-            <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                <a href="admin.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
-                    🔐 管理者はこちら
-                </a>
+            <div style="margin-top:2rem; border-top:1px solid #eee; padding-top:1rem;">
+                <a href="admin.html" style="color:#94a3b8; text-decoration:none; font-size:0.9rem;">🔐 管理画面へ移動</a>
             </div>
         </div>
     </div>
@@ -31,28 +28,21 @@
         <nav class="top-nav">
             <h1 class="nav-title">🚀 Projects Portfolio</h1>
             <div class="nav-right">
-                <button id="viewer-logout-btn" class="nav-logout" style="font-size:0.8rem;">Exit</button>
+                <a href="admin.html" class="nav-admin">🔐 管理画面</a>
             </div>
         </nav>
-
         <div class="container">
             <div class="filter-section" id="filter-section"></div>
-
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>データを取得中...</p>
-            </div>
-
+            <div id="loading" class="loading"><div class="spinner"></div><p>データを取得中...</p></div>
             <div id="projects-grid" class="projects-grid"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ■■■ Firebase設定 ■■■
+        // ■■■ Firebase設定 (貼り付けてください) ■■■
         const firebaseConfig = {
             apiKey: "AIzaSyDQuSOlOynAMMtBhBNBoGNHToN6QL-qkX4",
             authDomain: "portfolio-db-5df49.firebaseapp.com",
@@ -65,65 +55,36 @@
         // ■■■■■■■■■■■■■■■■■■■■■■
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ▼▼▼ 認証ロジック ▼▼▼
-        const VIEWER_EMAIL = "guest@portfolio.com";
+        // ▼ パスワード認証（JSのみ）▼
+        const CORRECT_PASS = "scc62625353";
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
+        document.getElementById('lock-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('lock-password').value === CORRECT_PASS) {
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                init(); 
+                init(); // 画面表示後にデータ取得
             } else {
-                document.getElementById('lock-screen').style.display = 'flex';
-                document.getElementById('main-content').style.display = 'none';
+                document.getElementById('lock-error').textContent = "パスワードが違います";
             }
         });
 
-        document.getElementById('lock-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const password = document.getElementById('lock-password').value;
-            const errorEl = document.getElementById('lock-error');
-            errorEl.textContent = "認証中...";
-
-            try {
-                await signInWithEmailAndPassword(auth, VIEWER_EMAIL, password);
-            } catch (error) {
-                console.error(error);
-                errorEl.textContent = "パスワードが違います";
-                document.getElementById('lock-password').value = "";
-            }
-        });
-
-        document.getElementById('viewer-logout-btn').addEventListener('click', () => {
-            signOut(auth);
-            location.reload();
-        });
-
-        // ▼▼▼ データ取得ロジック ▼▼▼
+        // ▼ データ取得 ▼
         let projectsData = [], categoriesData = [], platformsData = {};
 
         async function init() {
-            const loading = document.getElementById('loading');
-            
             try {
-                // ⚠️重要: インデックスエラー回避のため、一旦 orderBy を外して取得してみる
-                // これで表示されれば「インデックス未作成」が原因と確定します
-                
-                /* --- もしこれで動くなら、Firebaseコンソールでインデックス作成が必要です --- */
-                // 一旦並び替えなしで取得
+                // 並び替えなしで全件取得 (インデックスエラー回避)
                 const [catSnap, platSnap, projSnap] = await Promise.all([
-                    getDocs(collection(db, "categories")), 
+                    getDocs(collection(db, "categories")),
                     getDocs(collection(db, "platforms")),
-                    getDocs(collection(db, "projects")) 
+                    getDocs(collection(db, "projects"))
                 ]);
-                /* ------------------------------------------------------- */
 
                 categoriesData = [];
                 catSnap.forEach(doc => categoriesData.push({ id: doc.id, ...doc.data() }));
-                // JS側で並び替え（安全策）
                 categoriesData.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                 platformsData = {};
@@ -131,100 +92,56 @@
 
                 projectsData = [];
                 projSnap.forEach(doc => projectsData.push({ id: doc.id, ...doc.data() }));
-                // JS側で並び替え（安全策）
-                projectsData.sort((a, b) => {
-                    const orderA = a.order === undefined ? 999 : a.order;
-                    const orderB = b.order === undefined ? 999 : b.order;
-                    return orderA - orderB;
-                });
+                projectsData.sort((a, b) => (a.order || 999) - (b.order || 999));
 
                 renderFilters();
                 displayProjects('all');
-                loading.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
 
             } catch (e) {
-                console.error("詳細エラー:", e);
-                
-                // 権限エラー
-                if(e.code === 'permission-denied') {
-                    alert('権限がありません。パスワードを確認してください。');
-                    signOut(auth);
-                } 
-                // インデックスエラー (重要)
-                else if (e.code === 'failed-precondition') {
-                    console.log("★重要: コンソール(F12)に表示されたリンクをクリックしてインデックスを作成してください");
-                    alert('初期設定が必要です：F12キーを押してコンソールにあるリンクをクリックしてください');
-                }
-                
-                loading.innerHTML = `<p class="error-message">エラーが発生しました<br>${e.code}: ${e.message}</p>`;
+                console.error(e);
+                document.getElementById('loading').innerHTML = `<p class="error-message">${e.message}</p>`;
             }
         }
 
         function renderFilters() {
-            const container = document.getElementById('filter-section');
-            let html = `<button class="filter-btn active" onclick="filterProjects('all')">すべて</button>`;
-            categoriesData.forEach(cat => {
-                html += `<button class="filter-btn" onclick="filterProjects('${cat.id}')">${cat.name}</button>`;
-            });
-            container.innerHTML = html;
+            const div = document.getElementById('filter-section');
+            div.innerHTML = `<button class="filter-btn active" onclick="filter('all')">すべて</button>` +
+                categoriesData.map(c => `<button class="filter-btn" onclick="filter('${c.id}')">${c.name}</button>`).join('');
         }
 
-        window.filterProjects = (catId) => {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        window.filter = (id) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
-            displayProjects(catId);
+            displayProjects(id);
         };
 
-        function displayProjects(filterCatId) {
+        function displayProjects(catId) {
             const grid = document.getElementById('projects-grid');
-            const targets = filterCatId === 'all' 
-                ? projectsData 
-                : projectsData.filter(p => p.categoryId === filterCatId);
-
+            const targets = catId === 'all' ? projectsData : projectsData.filter(p => p.categoryId === catId);
+            
             if (targets.length === 0) {
-                grid.innerHTML = '<div class="no-projects"><p>プロジェクトが見つかりません</p></div>';
-                return;
+                grid.innerHTML = '<div class="no-projects"><p>プロジェクトがありません</p></div>'; return;
             }
 
             grid.innerHTML = targets.map(p => {
-                const platform = platformsData[p.platformId] || { name: 'Unknown', color: '#ccc' };
-                const hasLink = !!p.url;
-
+                const plat = platformsData[p.platformId] || { name: '-', color: '#ccc' };
+                const link = p.url ? `<a href="${p.url}" target="_blank" class="project-link">サイトを開く</a>` : `<span class="project-link disabled">リンクなし</span>`;
+                const edit = p.editUrl ? `<a href="${p.editUrl}" target="_blank" class="project-link-edit">編集</a>` : '';
+                const tags = p.tags ? `<div class="project-tags">${p.tags.split(',').map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : '';
+                
                 return `
                 <div class="project-card">
                     <div class="project-card-inner">
                         <div class="project-main-content">
-                            <div class="project-header">
-                                <span class="creator-badge">👤 ${p.creator}</span>
-                                <h3>${p.title}</h3>
-                            </div>
+                            <div class="project-header"><span class="creator-badge">👤 ${p.creator}</span><h3>${p.title}</h3></div>
                             <div class="project-body-row">
-                                <div class="project-platform-area">
-                                    <div class="doc-icon">📄</div>
-                                    <span class="platform-badge" style="background-color: ${platform.color}">${platform.name}</span>
-                                </div>
-                                <p class="project-description">${p.description || ''}</p>
+                                <div class="project-platform-area"><div class="doc-icon">📄</div><span class="platform-badge" style="background:${plat.color}">${plat.name}</span></div>
+                                <p class="project-description">${p.description||''}</p>
                             </div>
-                            <div class="project-links-area">
-                                ${hasLink ? `
-                                    <a href="${p.url}" target="_blank" class="project-link">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
-                                        サイトを開く
-                                    </a>
-                                ` : `
-                                    <span class="project-link disabled">リンクなし</span>
-                                `}
-                                ${p.editUrl ? `<a href="${p.editUrl}" target="_blank" class="project-link-edit">編集</a>` : ''}
-                            </div>
+                            <div class="project-links-area">${link}${edit}</div>
                         </div>
-                        <div class="project-side-content">
-                            <div class="thumbnail-placeholder-side">📄</div>
-                            ${p.tags ? `
-                                <div class="project-tags">
-                                    ${p.tags.split(',').map(t => `<span class="tag">${t.trim()}</span>`).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
+                        <div class="project-side-content"><div class="thumbnail-placeholder-side">📄</div>${tags}</div>
                     </div>
                 </div>`;
             }).join('');
