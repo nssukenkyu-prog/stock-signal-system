@@ -37,7 +37,22 @@
         </div>
 
         <div id="tab-projects" class="tab-content">
+            
+            <div id="save-order-container" class="save-order-area">
+                <button onclick="saveOrder()" class="btn-primary" style="background-color: #f59e0b;">
+                    💾 並び順を保存する
+                </button>
+            </div>
+
             <div class="admin-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2>📋 登録済みプロジェクト</h2>
+                    <small class="form-hint">※ドラッグ＆ドロップで並び替えられます</small>
+                </div>
+                <div id="admin-projects-list" class="admin-list"></div>
+            </div>
+
+            <div class="admin-panel" style="margin-top: 2rem;">
                 <h2>✨ プロジェクト管理</h2>
                 <form id="add-project-form" class="project-form">
                     <input type="hidden" name="docId" id="edit-doc-id">
@@ -74,14 +89,13 @@
                     
                     <div class="form-group">
                         <label>説明</label>
-                        <textarea name="description" id="input-description" rows="3"></textarea>
+                        <textarea name="description" id="input-description" rows="2"></textarea>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>公開URL (空欄可)</label>
                             <input type="url" name="url" id="input-url" placeholder="https://..." />
-                            <small class="form-hint">※リンクがない場合は空欄にしてください</small>
                         </div>
                         <div class="form-group">
                             <label>編集URL (任意)</label>
@@ -93,24 +107,18 @@
                         <label>タグ (カンマ区切り)</label>
                         <input type="text" name="tags" id="input-tags" />
                     </div>
-
-                    <div style="display: flex; gap: 1rem; align-items: center;">
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
                         <button type="submit" class="btn-primary" id="submit-btn">プロジェクトを追加</button>
                         <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;" onclick="resetForm()">キャンセル</button>
                     </div>
                 </form>
-            </div>
-            
-            <div class="admin-panel">
-                <h2>📋 登録済みプロジェクト</h2>
-                <div id="admin-projects-list" class="admin-list"></div>
             </div>
         </div>
 
         <div id="tab-categories" class="tab-content" style="display:none;">
             <div class="admin-panel">
                 <h2>🏷️ メインカテゴリー設定</h2>
-                <p class="form-hint">「健康」「業務」「公開講座」などを登録します。</p>
                 <form id="add-category-form" class="project-form">
                     <div class="form-row">
                         <div class="form-group">
@@ -128,22 +136,9 @@
             </div>
         </div>
 
-        <div class="form-row">
-    <div class="form-group">
-        <label>表示順 (小さい数字が上)</label>
-        <input type="number" name="order" id="input-order" value="100" placeholder="例: 1" />
-        <small class="form-hint">※デフォルトは100です。1にすると一番上に来ます。</small>
-    </div>
-    <div class="form-group">
-        <label>タグ (カンマ区切り)</label>
-        <input type="text" name="tags" id="input-tags" />
-    </div>
-</div>
-        
         <div id="tab-platforms" class="tab-content" style="display:none;">
             <div class="admin-panel">
                 <h2>🔧 プラットフォーム (サブ) 設定</h2>
-                <p class="form-hint">「GAS」「GitHub」などを登録します。</p>
                 <form id="add-platform-form" class="project-form">
                     <div class="form-row">
                         <div class="form-group">
@@ -166,9 +161,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ■■■ Firebase設定 (portfolio.htmlと同じAPIキーをここに貼ってください) ■■■
+        // ■■■ Firebase設定 (あなたのAPIキーをここに貼ってください) ■■■
         const firebaseConfig = {
             apiKey: "AIzaSyDQuSOlOynAMMtBhBNBoGNHToN6QL-qkX4",
             authDomain: "portfolio-db-5df49.firebaseapp.com",
@@ -184,19 +179,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // グローバル変数
         window.projectsMap = {};
 
-        // タブ切り替え機能
+        // タブ切り替え
         window.switchTab = (tabName) => {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.getElementById(`tab-${tabName}`).style.display = 'block';
-            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
         };
 
-        // ログイン処理
+        // ログイン
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
@@ -208,14 +201,11 @@
 
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // 認証監視 & データ読み込み開始
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('admin-content').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block';
-                
-                // データ監視開始
                 subscribeData();
             } else {
                 document.getElementById('auth-section').style.display = 'flex';
@@ -227,158 +217,216 @@
         let platformsMap = {};
 
         function subscribeData() {
-            // 1. カテゴリー
-            const qCat = query(collection(db, "categories"), orderBy("order"));
-            onSnapshot(qCat, (snapshot) => {
+            // カテゴリー
+            onSnapshot(query(collection(db, "categories"), orderBy("order")), (snapshot) => {
                 const listEl = document.getElementById('admin-categories-list');
                 const selectEl = document.getElementById('project-category-select');
-                
                 listEl.innerHTML = '';
                 selectEl.innerHTML = '<option value="">選択してください</option>';
                 categoriesMap = {};
-
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     categoriesMap[doc.id] = d;
-                    
                     listEl.innerHTML += `
                         <div class="admin-item">
                             <span>${d.order}. <strong>${d.name}</strong></span>
                             <button class="btn-delete" onclick="deleteItem('categories', '${doc.id}')">削除</button>
                         </div>`;
-                    
                     selectEl.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
                 });
             });
 
-            // 2. プラットフォーム
-            const qPlat = query(collection(db, "platforms"), orderBy("name"));
-            onSnapshot(qPlat, (snapshot) => {
+            // プラットフォーム
+            onSnapshot(query(collection(db, "platforms"), orderBy("name")), (snapshot) => {
                 const listEl = document.getElementById('admin-platforms-list');
                 const selectEl = document.getElementById('project-platform-select');
-                
                 listEl.innerHTML = '';
                 selectEl.innerHTML = '<option value="">選択してください</option>';
                 platformsMap = {};
-
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     platformsMap[doc.id] = d;
-
                     listEl.innerHTML += `
                         <div class="admin-item">
                             <span><span class="color-sample" style="background:${d.color}; width:15px; height:15px; display:inline-block; margin-right:5px;"></span>${d.name}</span>
                             <button class="btn-delete" onclick="deleteItem('platforms', '${doc.id}')">削除</button>
                         </div>`;
-                    
                     selectEl.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
                 });
             });
 
-            // 3. プロジェクト読み込み
-    // ★修正: ここでは単純に作成日順で取っておき、表示時にJSでorder順に並べ直します
-    const qProj = query(collection(db, "projects"), orderBy("createdAt", "desc"));
-    onSnapshot(qProj, (snapshot) => {
-        const listEl = document.getElementById('admin-projects-list');
-        listEl.innerHTML = '';
-        window.projectsMap = {};
+            // プロジェクト (作成日順で取得し、JSで並び替え)
+            const qProj = query(collection(db, "projects"), orderBy("createdAt", "desc"));
+            onSnapshot(qProj, (snapshot) => {
+                const listEl = document.getElementById('admin-projects-list');
+                listEl.innerHTML = '';
+                window.projectsMap = {};
 
-        let projects = [];
-        snapshot.forEach(doc => {
-            projects.push({ id: doc.id, ...doc.data() });
-        });
+                let projects = [];
+                snapshot.forEach(doc => {
+                    projects.push({ id: doc.id, ...doc.data() });
+                });
 
-        // ★追加: ここで「表示順(order)」の昇順に並び替え
-        // orderがない場合は 999 として扱います
-        projects.sort((a, b) => (a.order === undefined ? 999 : a.order) - (b.order === undefined ? 999 : b.order));
+                // 並び替え
+                projects.sort((a, b) => (a.order === undefined ? 999 : a.order) - (b.order === undefined ? 999 : b.order));
 
-        projects.forEach(d => {
-            window.projectsMap[d.id] = d;
+                projects.forEach(d => {
+                    window.projectsMap[d.id] = d;
+                    const catName = categoriesMap[d.categoryId]?.name || '未設定';
+                    const platName = platformsMap[d.platformId]?.name || '未設定';
+                    
+                    // ドラッグ用の属性 draggable="true" と data-id を付与
+                    listEl.innerHTML += `
+                        <div class="admin-item" draggable="true" data-id="${d.id}">
+                            <div class="admin-item-info" style="pointer-events: none;">
+                                <h3 style="pointer-events: none;">
+                                    <span style="cursor:grab; font-size:1.2em; margin-right:10px;">☰</span>
+                                    ${d.title}
+                                </h3>
+                                <p class="form-hint" style="pointer-events: none;">
+                                    👤 ${d.creator} | 🏷️ ${catName} | 🔧 ${platName} 
+                                </p>
+                            </div>
+                            <div class="admin-item-actions">
+                                <button class="btn-edit" onclick="editProject('${d.id}')" style="background-color:#f59e0b; margin-right:5px;">編集</button>
+                                <button class="btn-delete" onclick="deleteItem('projects', '${d.id}')">削除</button>
+                            </div>
+                        </div>`;
+                });
+
+                // ドラッグ＆ドロップのイベントリスナーを設定
+                setupDragAndDrop();
+            });
+        }
+
+        // ドラッグ＆ドロップ処理
+        function setupDragAndDrop() {
+            const list = document.getElementById('admin-projects-list');
+            let draggedItem = null;
+
+            list.querySelectorAll('.admin-item').forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    setTimeout(() => item.classList.add('dragging'), 0);
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    draggedItem = null;
+                    // 並び替えが発生したら保存ボタンを表示
+                    document.getElementById('save-order-container').style.display = 'block';
+                });
+            });
+
+            list.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(list, e.clientY);
+                const currentItem = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    list.appendChild(currentItem);
+                } else {
+                    list.insertBefore(currentItem, afterElement);
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.admin-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // 並び順を保存 (一括更新)
+        window.saveOrder = async () => {
+            if(!confirm('現在の並び順で保存しますか？')) return;
+
+            const batch = writeBatch(db);
+            const items = document.querySelectorAll('#admin-projects-list .admin-item');
             
-            const catName = categoriesMap[d.categoryId]?.name || '未設定';
-            const platName = platformsMap[d.platformId]?.name || '未設定';
-            const orderVal = d.order === undefined ? '-' : d.order; // 表示用
+            items.forEach((item, index) => {
+                const id = item.dataset.id;
+                const ref = doc(db, "projects", id);
+                // 1から順番に番号を振る
+                batch.update(ref, { order: index + 1 });
+            });
 
-            listEl.innerHTML += `
-                <div class="admin-item">
-                    <div class="admin-item-info">
-                        <h3>
-                            <span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-right:5px;">#${orderVal}</span>
-                            ${d.title}
-                        </h3>
-                        <p class="form-hint">
-                            👤 ${d.creator} | 🏷️ ${catName} | 🔧 ${platName} 
-                        </p>
-                    </div>
-                    <div class="admin-item-actions">
-                        <button class="btn-edit" onclick="editProject('${d.id}')" style="background-color:#f59e0b; margin-right:5px;">編集</button>
-                        <button class="btn-delete" onclick="deleteItem('projects', '${d.id}')">削除</button>
-                    </div>
-                </div>`;
-        });
-    });
-}
+            try {
+                await batch.commit();
+                alert('✅ 並び順を保存しました！');
+                document.getElementById('save-order-container').style.display = 'none';
+            } catch (err) {
+                alert('エラー: ' + err.message);
+            }
+        };
 
-// 編集モードへ切り替え
-window.editProject = (id) => {
-    const d = window.projectsMap[id];
-    if (!d) return;
+        // 編集モード
+        window.editProject = (id) => {
+            const d = window.projectsMap[id];
+            if (!d) return;
 
-    document.getElementById('edit-doc-id').value = id;
-    document.getElementById('input-title').value = d.title;
-    document.getElementById('input-creator').value = d.creator;
-    document.getElementById('project-category-select').value = d.categoryId;
-    document.getElementById('project-platform-select').value = d.platformId;
-    document.getElementById('input-description').value = d.description || '';
-    document.getElementById('input-url').value = d.url || '';
-    document.getElementById('input-editUrl').value = d.editUrl || '';
-    document.getElementById('input-tags').value = d.tags || '';
-    // ★追加: 表示順のセット
-    document.getElementById('input-order').value = d.order !== undefined ? d.order : 100;
+            document.getElementById('edit-doc-id').value = id;
+            document.getElementById('input-title').value = d.title;
+            document.getElementById('input-creator').value = d.creator;
+            document.getElementById('project-category-select').value = d.categoryId;
+            document.getElementById('project-platform-select').value = d.platformId;
+            document.getElementById('input-description').value = d.description || '';
+            document.getElementById('input-url').value = d.url || '';
+            document.getElementById('input-editUrl').value = d.editUrl || '';
+            document.getElementById('input-tags').value = d.tags || '';
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.textContent = '更新する';
+            submitBtn.style.background = '#f59e0b';
+            document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+            document.getElementById('add-project-form').scrollIntoView({ behavior: 'smooth' });
+        };
 
-    // UI変更
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.textContent = '更新する';
-    submitBtn.style.background = '#f59e0b';
-    document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+        window.resetForm = () => {
+            document.getElementById('add-project-form').reset();
+            document.getElementById('edit-doc-id').value = '';
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.textContent = 'プロジェクトを追加';
+            submitBtn.style.background = '';
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+        };
 
-    // スクロール
-    document.getElementById('add-project-form').scrollIntoView({ behavior: 'smooth' });
-};
+        window.deleteItem = async (colName, id) => {
+            if(confirm('本当に削除しますか？')) {
+                await deleteDoc(doc(db, colName, id));
+            }
+        };
 
-// フォームのリセット
-window.resetForm = () => {
-    document.getElementById('add-project-form').reset();
-    document.getElementById('edit-doc-id').value = '';
-    document.getElementById('input-order').value = 100; // ★追加: デフォルトに戻す
-    
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.textContent = 'プロジェクトを追加';
-    submitBtn.style.background = '';
-    document.getElementById('cancel-edit-btn').style.display = 'none';
-};
+        // 保存処理
+        document.getElementById('add-category-form').addEventListener('submit', (e) => handleSubmit(e, 'categories'));
+        document.getElementById('add-platform-form').addEventListener('submit', (e) => handleSubmit(e, 'platforms'));
+        document.getElementById('add-project-form').addEventListener('submit', (e) => handleSubmit(e, 'projects'));
 
-// 送信処理
-async function handleSubmit(e, colName) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    const docId = data.docId;
-    delete data.docId;
+        async function handleSubmit(e, colName) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const docId = data.docId;
+            delete data.docId;
 
-    // 数値変換
-    if (data.order) data.order = parseInt(data.order); // ★追加
+            if (data.order) data.order = parseInt(data.order);
             
             try {
                 if (colName === 'projects' && docId) {
-                    // 更新モード
                     await updateDoc(doc(db, colName, docId), data);
                     alert('✅ 更新しました');
                     if (colName === 'projects') resetForm();
                 } else {
-                    // 新規追加モード
                     data.createdAt = new Date().toISOString();
+                    // 新規追加時は末尾(999)にする
+                    if(colName === 'projects') data.order = 999; 
                     await addDoc(collection(db, colName), data);
                     alert('✨ 追加しました');
                     e.target.reset();
