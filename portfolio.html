@@ -34,7 +34,12 @@
 
         <div class="container">
             <div class="filter-section" id="filter-section"></div>
-            <div id="loading" class="loading"><div class="spinner"></div><p>データを取得中...</p></div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>データを取得中...</p>
+            </div>
+
             <div id="projects-grid" class="projects-grid"></div>
         </div>
     </div>
@@ -43,7 +48,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ■■■ Firebase設定 (貼り付けてください) ■■■
+        // ■■■ Firebase設定 ■■■
         const firebaseConfig = {
             apiKey: "AIzaSyDQuSOlOynAMMtBhBNBoGNHToN6QL-qkX4",
             authDomain: "portfolio-db-5df49.firebaseapp.com",
@@ -58,65 +63,77 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ▼ パスワード認証（JSのみ）
+        // ▼ パスワード認証（JavaScript簡易認証）
         const CORRECT_PASS = "scc62625353";
 
         document.getElementById('lock-form').addEventListener('submit', (e) => {
             e.preventDefault();
             if (document.getElementById('lock-password').value === CORRECT_PASS) {
+                // ロック解除
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
+                // データ読み込み開始
                 init(); 
             } else {
                 document.getElementById('lock-error').textContent = "パスワードが違います";
             }
         });
 
-        // ▼ データ取得
+        // ▼ データ保持用変数
         let projectsData = [], categoriesData = [], platformsData = {};
 
+        // ▼ 初期化・データ取得処理
         async function init() {
+            const loading = document.getElementById('loading');
             try {
+                // 並び替えなしで全件取得 (インデックスエラー回避のため)
                 const [catSnap, platSnap, projSnap] = await Promise.all([
                     getDocs(collection(db, "categories")),
                     getDocs(collection(db, "platforms")),
                     getDocs(collection(db, "projects"))
                 ]);
 
+                // カテゴリー整理
                 categoriesData = [];
                 catSnap.forEach(doc => categoriesData.push({ id: doc.id, ...doc.data() }));
                 categoriesData.sort((a, b) => (a.order || 0) - (b.order || 0));
 
+                // プラットフォーム整理
                 platformsData = {};
                 platSnap.forEach(doc => platformsData[doc.id] = doc.data());
 
+                // プロジェクト整理
                 projectsData = [];
                 projSnap.forEach(doc => projectsData.push({ id: doc.id, ...doc.data() }));
+                // 表示順(order)で並び替え
                 projectsData.sort((a, b) => (a.order || 999) - (b.order || 999));
 
+                // 描画実行
                 renderFilters();
                 displayProjects('all');
-                document.getElementById('loading').style.display = 'none';
+                loading.style.display = 'none';
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loading').innerHTML = `<p class="error-message">${e.message}</p>`;
+                loading.innerHTML = `<p class="error-message">読み込みエラー: ${e.message}</p>`;
             }
         }
 
+        // ▼ フィルターボタン描画
         function renderFilters() {
             const div = document.getElementById('filter-section');
             div.innerHTML = `<button class="filter-btn active" onclick="filter('all')">すべて</button>` +
                 categoriesData.map(c => `<button class="filter-btn" onclick="filter('${c.id}')">${c.name}</button>`).join('');
         }
 
+        // グローバルフィルター関数
         window.filter = (id) => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
             displayProjects(id);
         };
 
-        // ▼▼▼ プロジェクト表示（3パターンリンク対応） ▼▼▼
+        // ▼ プロジェクト一覧描画 (シンプルリスト版)
         function displayProjects(catId) {
             const grid = document.getElementById('projects-grid');
             const targets = catId === 'all' ? projectsData : projectsData.filter(p => p.categoryId === catId);
@@ -128,7 +145,7 @@
             grid.innerHTML = targets.map(p => {
                 const plat = platformsData[p.platformId] || { name: '-', color: '#ccc' };
                 
-                // リンク確認
+                // リンクの有無チェック
                 const hasLp = !!p.url;
                 const hasSheet = !!p.spreadsheetUrl;
                 const hasEdit = !!p.editUrl;
@@ -136,40 +153,40 @@
 
                 return `
                 <div class="project-card">
-                    <div class="project-card-inner">
-                        <div class="project-main-content">
-                            <div class="project-header"><span class="creator-badge">👤 ${p.creator}</span><h3>${p.title}</h3></div>
-                            <div class="project-body-row">
-                                <div class="project-platform-area"><div class="doc-icon">📄</div><span class="platform-badge" style="background:${plat.color}">${plat.name}</span></div>
-                                <p class="project-description">${p.description||''}</p>
-                            </div>
-                            
-                            <div class="project-links-area" style="flex-wrap:wrap; gap:8px;">
-                                ${!hasAnyLink ? `<span class="project-link disabled">リンクなし</span>` : ''}
-
-                                ${hasLp ? `
-                                    <a href="${p.url}" target="_blank" class="project-link" title="公開サイト">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                        LP
-                                    </a>
-                                ` : ''}
-
-                                ${hasSheet ? `
-                                    <a href="${p.spreadsheetUrl}" target="_blank" class="project-link" style="color:#16a34a; border-color:#16a34a;" title="スプレッドシート">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                                        Sheet
-                                    </a>
-                                ` : ''}
-
-                                ${hasEdit ? `
-                                    <a href="${p.editUrl}" target="_blank" class="project-link project-link-edit" title="編集画面/コード">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        Edit
-                                    </a>
-                                ` : ''}
-                            </div>
+                    <div class="project-header-row">
+                        <div class="project-title-group">
+                            <h3>${p.title}</h3>
+                            <span class="creator-badge">👤 ${p.creator}</span>
+                            <span class="platform-badge-small" style="background:${plat.color}">${plat.name}</span>
                         </div>
-                        <div class="project-side-content"><div class="thumbnail-placeholder-side">📄</div>${p.tags ? `<div class="project-tags">${p.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div>` : ''}</div>
+                    </div>
+
+                    <p class="project-description">${p.description||''}</p>
+                    
+                    <div class="project-footer-row">
+                        <div class="project-links-group">
+                            ${!hasAnyLink ? `<span class="project-link disabled">リンクなし</span>` : ''}
+
+                            ${hasLp ? `
+                                <a href="${p.url}" target="_blank" class="project-link" title="公開サイト">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> LP
+                                </a>` : ''}
+
+                            ${hasSheet ? `
+                                <a href="${p.spreadsheetUrl}" target="_blank" class="project-link link-sheet" title="スプレッドシート">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg> Sheet
+                                </a>` : ''}
+
+                            ${hasEdit ? `
+                                <a href="${p.editUrl}" target="_blank" class="project-link link-edit" title="編集画面/コード">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit
+                                </a>` : ''}
+                        </div>
+
+                        ${p.tags ? `
+                            <div class="project-tags">
+                                ${p.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}
+                            </div>` : ''}
                     </div>
                 </div>`;
             }).join('');
