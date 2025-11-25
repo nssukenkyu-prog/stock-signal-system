@@ -7,101 +7,115 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="admin-page">
-    <nav class="top-nav">
-        <a href="portfolio.html" class="nav-back">← 一覧に戻る</a>
-        <h1 class="nav-title">⚙️ 総合管理画面</h1>
-    </nav>
-
-    <div class="container">
-        <div class="admin-tabs">
-            <button class="tab-btn active" onclick="switchTab('projects')">📂 プロジェクト</button>
-            <button class="tab-btn" onclick="switchTab('categories')">🏷️ カテゴリー</button>
-            <button class="tab-btn" onclick="switchTab('platforms')">🔧 プラットフォーム</button>
+    <!-- ログインオーバーレイ -->
+    <div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; width: 90%;">
+            <h2 style="margin-bottom: 1.5rem; color: #1e293b;">🔐 管理画面ログイン</h2>
+            <input type="password" id="password-input" placeholder="パスワードを入力" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 1rem; font-size: 1rem;">
+            <p id="login-error" style="color: #ef4444; font-size: 0.875rem; margin-bottom: 1rem; display: none;"></p>
+            <button onclick="attemptLogin()" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">ログイン</button>
         </div>
+    </div>
 
-        <div id="tab-projects" class="tab-content">
-            <div class="admin-panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                    <h2>📋 登録済みプロジェクト</h2>
-                    <button onclick="saveOrder()" class="btn-primary" style="background-color: #f59e0b; font-size:0.9rem;">💾 並び順を保存</button>
+    <!-- 管理画面コンテンツ（初期状態は非表示） -->
+    <div id="admin-app" style="display: none;">
+        <nav class="top-nav">
+            <a href="portfolio.html" class="nav-back">← 一覧に戻る</a>
+            <h1 class="nav-title">⚙️ 総合管理画面</h1>
+            <button onclick="logout()" style="margin-left: auto; background: transparent; border: 1px solid white; color: white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">ログアウト</button>
+        </nav>
+
+        <div class="container">
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchTab('projects')">📂 プロジェクト</button>
+                <button class="tab-btn" onclick="switchTab('categories')">🏷️ カテゴリー</button>
+                <button class="tab-btn" onclick="switchTab('platforms')">🔧 プラットフォーム</button>
+            </div>
+
+            <div id="tab-projects" class="tab-content">
+                <div class="admin-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h2>📋 登録済みプロジェクト</h2>
+                        <button onclick="saveOrder()" class="btn-primary" style="background-color: #f59e0b; font-size:0.9rem;">💾 並び順を保存</button>
+                    </div>
+                    <div id="admin-projects-list" class="admin-list"></div>
                 </div>
-                <div id="admin-projects-list" class="admin-list"></div>
+
+                <div class="admin-panel" style="margin-top: 2rem;">
+                    <h2>✨ 追加・編集</h2>
+                    <form id="add-project-form" class="project-form">
+                        <input type="hidden" name="docId" id="edit-doc-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>タイトル</label>
+                                <input type="text" name="title" id="input-title" required />
+                            </div>
+                            <div class="form-group">
+                                <label>作成者</label>
+                                <input type="text" name="creator" id="input-creator" list="creators-list" required/>
+                                <datalist id="creators-list"><option value="Yuzu bot"><option value="Kedo bot"></datalist>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>カテゴリー</label>
+                                <select name="categoryId" id="project-category-select" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>プラットフォーム</label>
+                                <select name="platformId" id="project-platform-select" required></select>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>説明</label><textarea name="description" id="input-description" rows="2"></textarea></div>
+                        <div class="form-group">
+                            <label>リンク設定 (あるものだけ入力)</label>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="url" id="input-url" placeholder="🔗 LP / 公開サイト" /></div>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="spreadsheetUrl" id="input-spreadsheetUrl" placeholder="📊 スプレッドシート" /></div>
+                            <div><input type="url" name="editUrl" id="input-editUrl" placeholder="💻 GAS / GitHub / 編集画面" /></div>
+                        </div>
+                        <div class="form-group"><label>タグ</label><input type="text" name="tags" id="input-tags" /></div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button type="submit" class="btn-primary" id="submit-btn">追加</button>
+                            <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;" onclick="resetForm('project')">キャンセル</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="admin-panel" style="margin-top: 2rem;">
-                <h2>✨ 追加・編集</h2>
-                <form id="add-project-form" class="project-form">
-                    <input type="hidden" name="docId" id="edit-doc-id">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>タイトル</label>
-                            <input type="text" name="title" id="input-title" required />
+            <div id="tab-categories" class="tab-content" style="display:none;">
+                <div class="admin-panel">
+                    <h2>🏷️ カテゴリー設定</h2>
+                    <form id="add-category-form" class="project-form">
+                        <input type="hidden" name="docId" id="edit-cat-id">
+                        <div class="form-row">
+                            <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
+                            <div class="form-group"><label>順序</label><input type="number" name="order" required value="1" /></div>
                         </div>
-                        <div class="form-group">
-                            <label>作成者</label>
-                            <input type="text" name="creator" id="input-creator" list="creators-list" required/>
-                            <datalist id="creators-list"><option value="Yuzu bot"><option value="Kedo bot"></datalist>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button type="submit" class="btn-primary" id="cat-submit-btn">追加</button>
+                            <button type="button" id="cat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('category')">キャンセル</button>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>カテゴリー</label>
-                            <select name="categoryId" id="project-category-select" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label>プラットフォーム</label>
-                            <select name="platformId" id="project-platform-select" required></select>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>説明</label><textarea name="description" id="input-description" rows="2"></textarea></div>
-                    <div class="form-group">
-                        <label>リンク設定 (あるものだけ入力)</label>
-                        <div style="margin-bottom:0.5rem;"><input type="url" name="url" id="input-url" placeholder="🔗 LP / 公開サイト" /></div>
-                        <div style="margin-bottom:0.5rem;"><input type="url" name="spreadsheetUrl" id="input-spreadsheetUrl" placeholder="📊 スプレッドシート" /></div>
-                        <div><input type="url" name="editUrl" id="input-editUrl" placeholder="💻 GAS / GitHub / 編集画面" /></div>
-                    </div>
-                    <div class="form-group"><label>タグ</label><input type="text" name="tags" id="input-tags" /></div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="submit" class="btn-primary" id="submit-btn">追加</button>
-                        <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;" onclick="resetForm('project')">キャンセル</button>
-                    </div>
-                </form>
+                    </form>
+                    <div id="admin-categories-list" class="admin-list" style="margin-top: 2rem;"></div>
+                </div>
             </div>
-        </div>
 
-        <div id="tab-categories" class="tab-content" style="display:none;">
-            <div class="admin-panel">
-                <h2>🏷️ カテゴリー設定</h2>
-                <form id="add-category-form" class="project-form">
-                    <input type="hidden" name="docId" id="edit-cat-id">
-                    <div class="form-row">
-                        <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
-                        <div class="form-group"><label>順序</label><input type="number" name="order" required value="1" /></div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="submit" class="btn-primary" id="cat-submit-btn">追加</button>
-                        <button type="button" id="cat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('category')">キャンセル</button>
-                    </div>
-                </form>
-                <div id="admin-categories-list" class="admin-list" style="margin-top: 2rem;"></div>
-            </div>
-        </div>
-
-        <div id="tab-platforms" class="tab-content" style="display:none;">
-            <div class="admin-panel">
-                <h2>🔧 プラットフォーム設定</h2>
-                <form id="add-platform-form" class="project-form">
-                    <input type="hidden" name="docId" id="edit-plat-id">
-                    <div class="form-row">
-                        <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
-                        <div class="form-group"><label>色</label><input type="color" name="color" value="#34A853" class="color-input"/></div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="submit" class="btn-primary" id="plat-submit-btn">追加</button>
-                        <button type="button" id="plat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('platform')">キャンセル</button>
-                    </div>
-                </form>
-                <div id="admin-platforms-list" class="admin-list" style="margin-top: 2rem;"></div>
+            <div id="tab-platforms" class="tab-content" style="display:none;">
+                <div class="admin-panel">
+                    <h2>🔧 プラットフォーム設定</h2>
+                    <form id="add-platform-form" class="project-form">
+                        <input type="hidden" name="docId" id="edit-plat-id">
+                        <div class="form-row">
+                            <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
+                            <div class="form-group"><label>色</label><input type="color" name="color" value="#34A853" class="color-input"/></div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button type="submit" class="btn-primary" id="plat-submit-btn">追加</button>
+                            <button type="button" id="plat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('platform')">キャンセル</button>
+                        </div>
+                    </form>
+                    <div id="admin-platforms-list" class="admin-list" style="margin-top: 2rem;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -109,6 +123,45 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, query, orderBy, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ■■■ 認証ロジック ■■■
+        const PASSWORD = 'scc62625353'; // 簡易パスワード
+        const AUTH_KEY = 'portfolio_admin_auth';
+
+        window.attemptLogin = () => {
+            const input = document.getElementById('password-input');
+            const error = document.getElementById('login-error');
+            
+            if (input.value === PASSWORD) {
+                sessionStorage.setItem(AUTH_KEY, 'true');
+                showAdmin();
+            } else {
+                error.textContent = 'パスワードが違います';
+                error.style.display = 'block';
+            }
+        };
+
+        window.logout = () => {
+            sessionStorage.removeItem(AUTH_KEY);
+            location.reload();
+        };
+
+        function showAdmin() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('admin-app').style.display = 'block';
+            // データ読み込み開始
+            subscribeData();
+        }
+
+        // Enterキーでログイン
+        document.getElementById('password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.attemptLogin();
+        });
+
+        // 初期チェック
+        if (sessionStorage.getItem(AUTH_KEY) === 'true') {
+            showAdmin();
+        }
 
         // ■■■ Firebase設定 (貼り付けてください) ■■■
         const firebaseConfig = {
@@ -128,8 +181,8 @@
         window.categoriesMap = {};
         window.platformsMap = {};
 
-        // データ読み込み
-        subscribeData();
+        // データ読み込み (認証後に呼び出されるため、ここでは即時実行しない)
+        // subscribeData(); 
 
         function subscribeData() {
             // カテゴリー
