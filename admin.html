@@ -71,7 +71,8 @@
                             <label>リンク設定 (あるものだけ入力)</label>
                             <div style="margin-bottom:0.5rem;"><input type="url" name="url" id="input-url" placeholder="🔗 LP / 公開サイト" /></div>
                             <div style="margin-bottom:0.5rem;"><input type="url" name="spreadsheetUrl" id="input-spreadsheetUrl" placeholder="📊 スプレッドシート" /></div>
-                            <div><input type="url" name="editUrl" id="input-editUrl" placeholder="💻 GAS / GitHub / 編集画面" /></div>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="editUrl" id="input-editUrl" placeholder="💻 GAS / GitHub / 編集画面" /></div>
+                            <div><input type="url" name="formUrl" id="input-formUrl" placeholder="📝 Google Form / フォーム" /></div>
                         </div>
                         <div class="form-group"><label>タグ</label><input type="text" name="tags" id="input-tags" /></div>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -288,6 +289,7 @@
             document.getElementById('input-url').value = d.url||'';
             document.getElementById('input-spreadsheetUrl').value = d.spreadsheetUrl||'';
             document.getElementById('input-editUrl').value = d.editUrl||'';
+            document.getElementById('input-formUrl').value = d.formUrl||'';
             document.getElementById('input-tags').value = d.tags||'';
             
             // UI更新

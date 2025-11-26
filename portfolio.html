@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Portfolio</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="portfolio-page">
 
     <div id="lock-screen">
@@ -73,7 +75,7 @@
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 // データ読み込み開始
-                init(); 
+                init();
             } else {
                 document.getElementById('lock-error').textContent = "パスワードが違います";
             }
@@ -137,19 +139,20 @@
         function displayProjects(catId) {
             const grid = document.getElementById('projects-grid');
             const targets = catId === 'all' ? projectsData : projectsData.filter(p => p.categoryId === catId);
-            
+
             if (targets.length === 0) {
                 grid.innerHTML = '<div class="no-projects"><p>プロジェクトがありません</p></div>'; return;
             }
 
             grid.innerHTML = targets.map(p => {
                 const plat = platformsData[p.platformId] || { name: '-', color: '#ccc' };
-                
+
                 // リンクの有無チェック
                 const hasLp = !!p.url;
                 const hasSheet = !!p.spreadsheetUrl;
                 const hasEdit = !!p.editUrl;
-                const hasAnyLink = hasLp || hasSheet || hasEdit;
+                const hasForm = !!p.formUrl;
+                const hasAnyLink = hasLp || hasSheet || hasEdit || hasForm;
 
                 return `
                 <div class="project-card">
@@ -161,7 +164,7 @@
                         </div>
                     </div>
 
-                    <p class="project-description">${p.description||''}</p>
+                    <p class="project-description">${p.description || ''}</p>
                     
                     <div class="project-footer-row">
                         <div class="project-links-group">
@@ -181,11 +184,16 @@
                                 <a href="${p.editUrl}" target="_blank" class="project-link link-edit" title="編集画面/コード">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit
                                 </a>` : ''}
+
+                            ${hasForm ? `
+                                <a href="${p.formUrl}" target="_blank" class="project-link link-form" title="フォーム">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Form
+                                </a>` : ''}
                         </div>
 
                         ${p.tags ? `
                             <div class="project-tags">
-                                ${p.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}
+                                ${p.tags.split(',').map(t => `<span class="tag">${t.trim()}</span>`).join('')}
                             </div>` : ''}
                     </div>
                 </div>`;
@@ -193,4 +201,5 @@
         }
     </script>
 </body>
+
 </html>
