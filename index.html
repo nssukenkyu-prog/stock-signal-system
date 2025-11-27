@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Portfolio</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="portfolio-page">
     <nav class="top-nav">
         <h1 class="nav-title">🚀 Projects Portfolio</h1>
@@ -16,7 +18,7 @@
 
     <div class="container">
         <div class="filter-section" id="filter-section">
-            </div>
+        </div>
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -39,7 +41,7 @@
             appId: "1:587043981242:web:e74d3edb165569f0913f83",
             measurementId: "G-RDGM3YC3G4"
         };
-        
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -83,7 +85,7 @@
         function renderFilters() {
             const container = document.getElementById('filter-section');
             let html = `<button class="filter-btn active" onclick="filterProjects('all')">すべて</button>`;
-            
+
             categoriesData.forEach(cat => {
                 html += `<button class="filter-btn" onclick="filterProjects('${cat.id}')">${cat.name}</button>`;
             });
@@ -95,17 +97,17 @@
             // ボタンの見た目更新
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            
+
             displayProjects(catId);
         };
 
         // プロジェクト表示
         function displayProjects(filterCatId) {
             const grid = document.getElementById('projects-grid');
-            
+
             // フィルタリング
-            const targets = filterCatId === 'all' 
-                ? projectsData 
+            const targets = filterCatId === 'all'
+                ? projectsData
                 : projectsData.filter(p => p.categoryId === filterCatId);
 
             if (targets.length === 0) {
@@ -116,14 +118,18 @@
             grid.innerHTML = targets.map(p => {
                 const platform = platformsData[p.platformId] || { name: 'Unknown', color: '#ccc' };
                 const thumbUrl = convertGoogleDriveUrl(p.thumbnail);
-                const hasLink = !!p.url; // URLがあるかどうか
+                const hasLp = !!p.url;
+                const hasSheet = !!p.spreadsheetUrl;
+                const hasEdit = !!p.editUrl;
+                const hasForm = !!p.formUrl;
+                const hasAnyLink = hasLp || hasSheet || hasEdit || hasForm;
 
                 return `
                 <div class="project-card">
                     <div class="project-thumbnail">
-                        ${thumbUrl 
-                            ? `<img src="${thumbUrl}" alt="${p.title}" onerror="this.parentElement.innerHTML='<div class=\\'thumbnail-placeholder\\'>📄</div>'">` 
-                            : `<div class="thumbnail-placeholder">📄</div>`}
+                        ${thumbUrl
+                        ? `<img src="${thumbUrl}" alt="${p.title}" onerror="this.parentElement.innerHTML='<div class=\\'thumbnail-placeholder\\'>📄</div>'">`
+                        : `<div class="thumbnail-placeholder">📄</div>`}
                         <div class="thumbnail-overlay">
                             <span class="platform-badge" style="background:${platform.color}">${platform.name}</span>
                         </div>
@@ -135,26 +141,42 @@
                         <h3>${p.title}</h3>
                         <p class="project-description">${p.description || ''}</p>
                         
-                        ${p.tags ? `<div class="project-tags">${p.tags.split(',').map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : ''}
+                        ${p.tags ? `<div class="project-tags">${p.tags.split(',').map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
 
                         <div class="project-links">
-                            ${hasLink ? `
+                            ${hasLp ? `
                                 <a href="${p.url}" target="_blank" class="project-link project-link-view">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
                                     サイトを開く
                                 </a>
-                            ` : `
-                                <span class="project-link disabled">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
-                                    リンクなし (内部ツール)
-                                </span>
-                            `}
+                            ` : ''}
+
+                            ${hasForm ? `
+                                <a href="${p.formUrl}" target="_blank" class="project-link project-link-form" style="background-color: #7248B9; color: white;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    フォーム
+                                </a>
+                            ` : ''}
+
+                            ${hasSheet ? `
+                                <a href="${p.spreadsheetUrl}" target="_blank" class="project-link project-link-sheet" style="background-color: #1D6F42; color: white;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                                    シート
+                                </a>
+                            ` : ''}
                             
-                            ${p.editUrl ? `
+                            ${hasEdit ? `
                                 <a href="${p.editUrl}" target="_blank" class="project-link project-link-edit">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
                                     編集画面
                                 </a>
+                            ` : ''}
+
+                            ${!hasAnyLink ? `
+                                <span class="project-link disabled">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+                                    リンクなし (内部ツール)
+                                </span>
                             ` : ''}
                         </div>
                     </div>
@@ -174,4 +196,5 @@
         init();
     </script>
 </body>
+
 </html>
