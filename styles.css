@@ -112,7 +112,7 @@ body {
 
     padding: 1.5rem;
     border-radius: 0 0 20px 20px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 1.0) 0%, rgba(124, 58, 237, 1.0) 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #4c1d95 100%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
