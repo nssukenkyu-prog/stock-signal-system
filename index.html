@@ -136,7 +136,7 @@
                     </div>
                     <div class="project-content">
                         <div class="project-meta">
-                            <span class="creator-badge">👤 ${p.creator}</span>
+                            <span class="creator-badge">👤 ${p.creators ? p.creators.join('・') : (p.creator || '-')}</span>
                         </div>
                         <h3>${p.title}</h3>
                         <p class="project-description">${p.description || ''}</p>

@@ -96,8 +96,16 @@ body {
     display: flex;
     justify-content: center;
     gap: 0.8rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
     flex-wrap: wrap;
+    /* Sticky setting */
+    position: sticky;
+    top: 70px; /* nav height approx */
+    z-index: 90;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
 .filter-btn {

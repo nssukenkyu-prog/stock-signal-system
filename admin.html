@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>総合管理画面</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="admin-page">
     <!-- ログインオーバーレイ -->
-    <div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; width: 90%;">
+    <div id="login-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <div
+            style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; width: 90%;">
             <h2 style="margin-bottom: 1.5rem; color: #1e293b;">🔐 管理画面ログイン</h2>
-            <input type="password" id="password-input" placeholder="パスワードを入力" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 1rem; font-size: 1rem;">
+            <input type="password" id="password-input" placeholder="パスワードを入力"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 1rem; font-size: 1rem;">
             <p id="login-error" style="color: #ef4444; font-size: 0.875rem; margin-bottom: 1rem; display: none;"></p>
-            <button onclick="attemptLogin()" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">ログイン</button>
+            <button onclick="attemptLogin()"
+                style="width: 100%; background: #3b82f6; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">ログイン</button>
         </div>
     </div>
 
@@ -22,7 +28,8 @@
         <nav class="top-nav">
             <a href="portfolio.html" class="nav-back">← 一覧に戻る</a>
             <h1 class="nav-title">⚙️ 総合管理画面</h1>
-            <button onclick="logout()" style="margin-left: auto; background: transparent; border: 1px solid white; color: white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">ログアウト</button>
+            <button onclick="logout()"
+                style="margin-left: auto; background: transparent; border: 1px solid white; color: white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">ログアウト</button>
         </nav>
 
         <div class="container">
@@ -36,7 +43,8 @@
                 <div class="admin-panel">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                         <h2>📋 登録済みプロジェクト</h2>
-                        <button onclick="saveOrder()" class="btn-primary" style="background-color: #f59e0b; font-size:0.9rem;">💾 並び順を保存</button>
+                        <button onclick="saveOrder()" class="btn-primary"
+                            style="background-color: #f59e0b; font-size:0.9rem;">💾 並び順を保存</button>
                     </div>
                     <div id="admin-projects-list" class="admin-list"></div>
                 </div>
@@ -51,9 +59,19 @@
                                 <input type="text" name="title" id="input-title" required />
                             </div>
                             <div class="form-group">
-                                <label>作成者</label>
-                                <input type="text" name="creator" id="input-creator" list="creators-list" required/>
-                                <datalist id="creators-list"><option value="Yuzu bot"><option value="Kedo bot"></datalist>
+                                <label>作成者 (複数選択可)</label>
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 0;">
+                                    <label
+                                        style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                                        <input type="checkbox" name="creators" value="Yuzu bot"
+                                            class="creator-checkbox"> Yuzu bot
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                                        <input type="checkbox" name="creators" value="Kedo bot"
+                                            class="creator-checkbox"> Kedo bot
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div class="form-row">
@@ -66,18 +84,24 @@
                                 <select name="platformId" id="project-platform-select" required></select>
                             </div>
                         </div>
-                        <div class="form-group"><label>説明</label><textarea name="description" id="input-description" rows="2"></textarea></div>
+                        <div class="form-group"><label>説明</label><textarea name="description" id="input-description"
+                                rows="2"></textarea></div>
                         <div class="form-group">
                             <label>リンク設定 (あるものだけ入力)</label>
-                            <div style="margin-bottom:0.5rem;"><input type="url" name="url" id="input-url" placeholder="🔗 LP / 公開サイト" /></div>
-                            <div style="margin-bottom:0.5rem;"><input type="url" name="spreadsheetUrl" id="input-spreadsheetUrl" placeholder="📊 スプレッドシート" /></div>
-                            <div style="margin-bottom:0.5rem;"><input type="url" name="editUrl" id="input-editUrl" placeholder="💻 GAS / GitHub / 編集画面" /></div>
-                            <div><input type="url" name="formUrl" id="input-formUrl" placeholder="📝 Google Form / フォーム" /></div>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="url" id="input-url"
+                                    placeholder="🔗 LP / 公開サイト" /></div>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="spreadsheetUrl"
+                                    id="input-spreadsheetUrl" placeholder="📊 スプレッドシート" /></div>
+                            <div style="margin-bottom:0.5rem;"><input type="url" name="editUrl" id="input-editUrl"
+                                    placeholder="💻 GAS / GitHub / 編集画面" /></div>
+                            <div><input type="url" name="formUrl" id="input-formUrl"
+                                    placeholder="📝 Google Form / フォーム" /></div>
                         </div>
                         <div class="form-group"><label>タグ</label><input type="text" name="tags" id="input-tags" /></div>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button type="submit" class="btn-primary" id="submit-btn">追加</button>
-                            <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;" onclick="resetForm('project')">キャンセル</button>
+                            <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;"
+                                onclick="resetForm('project')">キャンセル</button>
                         </div>
                     </form>
                 </div>
@@ -90,11 +114,13 @@
                         <input type="hidden" name="docId" id="edit-cat-id">
                         <div class="form-row">
                             <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
-                            <div class="form-group"><label>順序</label><input type="number" name="order" required value="1" /></div>
+                            <div class="form-group"><label>順序</label><input type="number" name="order" required
+                                    value="1" /></div>
                         </div>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button type="submit" class="btn-primary" id="cat-submit-btn">追加</button>
-                            <button type="button" id="cat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('category')">キャンセル</button>
+                            <button type="button" id="cat-cancel-btn" class="btn-secondary" style="display:none;"
+                                onclick="resetForm('category')">キャンセル</button>
                         </div>
                     </form>
                     <div id="admin-categories-list" class="admin-list" style="margin-top: 2rem;"></div>
@@ -108,11 +134,13 @@
                         <input type="hidden" name="docId" id="edit-plat-id">
                         <div class="form-row">
                             <div class="form-group"><label>名前</label><input type="text" name="name" required /></div>
-                            <div class="form-group"><label>色</label><input type="color" name="color" value="#34A853" class="color-input"/></div>
+                            <div class="form-group"><label>色</label><input type="color" name="color" value="#34A853"
+                                    class="color-input" /></div>
                         </div>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button type="submit" class="btn-primary" id="plat-submit-btn">追加</button>
-                            <button type="button" id="plat-cancel-btn" class="btn-secondary" style="display:none;" onclick="resetForm('platform')">キャンセル</button>
+                            <button type="button" id="plat-cancel-btn" class="btn-secondary" style="display:none;"
+                                onclick="resetForm('platform')">キャンセル</button>
                         </div>
                     </form>
                     <div id="admin-platforms-list" class="admin-list" style="margin-top: 2rem;"></div>
@@ -132,7 +160,7 @@
         window.attemptLogin = () => {
             const input = document.getElementById('password-input');
             const error = document.getElementById('login-error');
-            
+
             if (input.value === PASSWORD) {
                 sessionStorage.setItem(AUTH_KEY, 'true');
                 showAdmin();
@@ -230,14 +258,14 @@
                 list.innerHTML = '';
                 let projects = [];
                 snap.forEach(doc => projects.push({ id: doc.id, ...doc.data() }));
-                projects.sort((a, b) => (a.order||999) - (b.order||999));
+                projects.sort((a, b) => (a.order || 999) - (b.order || 999));
 
                 projects.forEach(d => {
                     window.projectsMap[d.id] = d;
                     const cat = window.categoriesMap[d.categoryId]?.name || '-';
                     list.innerHTML += `
                         <div class="admin-item" draggable="true" data-id="${d.id}">
-                            <div class="admin-item-info"><h3>☰ ${d.title}</h3><p class="form-hint">👤${d.creator} | 🏷️${cat}</p></div>
+                            <div class="admin-item-info"><h3>☰ ${d.title}</h3><p class="form-hint">👤${d.creators ? d.creators.join('・') : (d.creator || '-')} | 🏷️${cat}</p></div>
                             <div class="admin-item-actions"><button class="btn-edit" onclick="editProject('${d.id}')" style="background:#f59e0b;">編集</button><button class="btn-delete" onclick="del('projects','${d.id}')">削除</button></div>
                         </div>`;
                 });
@@ -282,16 +310,20 @@
             const d = window.projectsMap[id];
             document.getElementById('edit-doc-id').value = id;
             document.getElementById('input-title').value = d.title;
-            document.getElementById('input-creator').value = d.creator;
+            // Checkbox handling
+            const creators = d.creators || (d.creator ? [d.creator] : []);
+            document.querySelectorAll('.creator-checkbox').forEach(cb => {
+                cb.checked = creators.includes(cb.value);
+            });
             document.getElementById('project-category-select').value = d.categoryId;
             document.getElementById('project-platform-select').value = d.platformId;
-            document.getElementById('input-description').value = d.description||'';
-            document.getElementById('input-url').value = d.url||'';
-            document.getElementById('input-spreadsheetUrl').value = d.spreadsheetUrl||'';
-            document.getElementById('input-editUrl').value = d.editUrl||'';
-            document.getElementById('input-formUrl').value = d.formUrl||'';
-            document.getElementById('input-tags').value = d.tags||'';
-            
+            document.getElementById('input-description').value = d.description || '';
+            document.getElementById('input-url').value = d.url || '';
+            document.getElementById('input-spreadsheetUrl').value = d.spreadsheetUrl || '';
+            document.getElementById('input-editUrl').value = d.editUrl || '';
+            document.getElementById('input-formUrl').value = d.formUrl || '';
+            document.getElementById('input-tags').value = d.tags || '';
+
             // UI更新
             document.getElementById('submit-btn').textContent = '更新';
             document.getElementById('cancel-edit-btn').style.display = 'inline-block';
@@ -304,7 +336,7 @@
             document.getElementById('edit-cat-id').value = id;
             document.querySelector('#add-category-form [name="name"]').value = d.name;
             document.querySelector('#add-category-form [name="order"]').value = d.order;
-            
+
             document.getElementById('cat-submit-btn').textContent = '更新';
             document.getElementById('cat-cancel-btn').style.display = 'inline-block';
         };
@@ -315,24 +347,25 @@
             document.getElementById('edit-plat-id').value = id;
             document.querySelector('#add-platform-form [name="name"]').value = d.name;
             document.querySelector('#add-platform-form [name="color"]').value = d.color;
-            
+
             document.getElementById('plat-submit-btn').textContent = '更新';
             document.getElementById('plat-cancel-btn').style.display = 'inline-block';
         };
 
         // リセット関数
         window.resetForm = (type) => {
-            if(type === 'project') {
+            if (type === 'project') {
                 document.getElementById('add-project-form').reset();
+                document.querySelectorAll('.creator-checkbox').forEach(cb => cb.checked = false); // Explicit reset
                 document.getElementById('edit-doc-id').value = '';
                 document.getElementById('submit-btn').textContent = '追加';
                 document.getElementById('cancel-edit-btn').style.display = 'none';
-            } else if(type === 'category') {
+            } else if (type === 'category') {
                 document.getElementById('add-category-form').reset();
                 document.getElementById('edit-cat-id').value = '';
                 document.getElementById('cat-submit-btn').textContent = '追加';
                 document.getElementById('cat-cancel-btn').style.display = 'none';
-            } else if(type === 'platform') {
+            } else if (type === 'platform') {
                 document.getElementById('add-platform-form').reset();
                 document.getElementById('edit-plat-id').value = '';
                 document.getElementById('plat-submit-btn').textContent = '追加';
@@ -340,38 +373,48 @@
             }
         };
 
-        window.del = async (col, id) => { if(confirm('削除しますか？')) await deleteDoc(doc(db, col, id)); };
+        window.del = async (col, id) => { if (confirm('削除しますか？')) await deleteDoc(doc(db, col, id)); };
 
         // 共通フォーム送信処理
         const handlers = { 'add-category-form': 'categories', 'add-platform-form': 'platforms', 'add-project-form': 'projects' };
         Object.keys(handlers).forEach(id => {
             document.getElementById(id).addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target).entries());
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                // Handle checkboxes for creators manually if it's the project form
+                if (id === 'add-project-form') {
+                    const selectedCreators = [];
+                    document.querySelectorAll('.creator-checkbox:checked').forEach(cb => selectedCreators.push(cb.value));
+                    data.creators = selectedCreators;
+                    delete data.creator; // Remove legacy if present
+                }
                 const col = handlers[id];
-                
+
                 // docIdを取り出し、データからは削除
-                const docId = data.docId; 
+                const docId = data.docId;
                 delete data.docId;
 
-                if(data.order) data.order = parseInt(data.order);
-                
-                if(col === 'projects' && !data.createdAt) data.createdAt = new Date().toISOString();
-                if(col === 'projects' && !data.order && !docId) data.order = 999; // 新規のみ999
+                if (data.order) data.order = parseInt(data.order);
 
-                if(docId) { 
+                if (col === 'projects' && !data.createdAt) data.createdAt = new Date().toISOString();
+                if (col === 'projects' && !data.order && !docId) data.order = 999; // 新規のみ999
+
+                if (docId) {
                     // 更新
-                    await updateDoc(doc(db, col, docId), data); 
+                    await updateDoc(doc(db, col, docId), data);
                     alert('✅ 更新しました');
-                    window.resetForm(col === 'projects' ? 'project' : col === 'categories' ? 'category' : 'platform'); 
-                } else { 
+                    window.resetForm(col === 'projects' ? 'project' : col === 'categories' ? 'category' : 'platform');
+                } else {
                     // 新規
-                    await addDoc(collection(db, col), data); 
+                    await addDoc(collection(db, col), data);
                     alert('✨ 追加しました');
-                    e.target.reset(); 
+                    e.target.reset();
                 }
             });
         });
     </script>
 </body>
+
 </html>

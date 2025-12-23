@@ -159,7 +159,7 @@
                     <div class="project-header-row">
                         <div class="project-title-group">
                             <h3>${p.title}</h3>
-                            <span class="creator-badge">👤 ${p.creator}</span>
+                            <span class="creator-badge">👤 ${p.creators ? p.creators.join('・') : (p.creator || '-')}</span>
                             <span class="platform-badge-small" style="background:${plat.color}">${plat.name}</span>
                         </div>
                     </div>
