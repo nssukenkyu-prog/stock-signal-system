@@ -94,6 +94,7 @@ export interface L1Signal {
     probability: number;     // 0-1: +X%到達確率
     targetPct: number;       // ボラ基準の目標上昇率
     horizonDays: number;     // 60/120
+    basePrice: number;       // Current price for target calculation
     factors: {
         momentum: number;
         trend: number;

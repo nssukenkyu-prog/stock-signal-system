@@ -25,6 +25,7 @@ export function calculateL1(
             probability: 0.5,
             targetPct: 10,
             horizonDays,
+            basePrice: currentPrice,
             factors: { momentum: 0.5, trend: 0.5, breakout: 0.5, volume: 0.5 },
         };
     }
@@ -136,6 +137,7 @@ export function calculateL1(
         probability,
         targetPct,
         horizonDays,
+        basePrice: currentPrice,
         factors: {
             momentum: momentumScore,
             trend: trendScore,

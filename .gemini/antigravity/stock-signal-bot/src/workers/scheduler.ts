@@ -5,7 +5,7 @@
 import type { Env } from '../types';
 import { fetchAllPrices, initializeHistoricalData } from './fetcher';
 import { generateAllSignals, generateHoldingsSignals } from './signal';
-import { sendSignalNotifications, sendDailySummary, sendAlert } from './notifier';
+import { sendSignalNotifications, sendDailySummary, sendAlert, sendWeeklyReport } from './notifier';
 import { isJapanMarketOpen, isUSMarketOpen } from '../utils/helpers';
 import { isEmergencyStop, setEmergencyStop } from '../storage/kv';
 import { cleanupIntradayPrices } from '../storage/d1';
@@ -30,7 +30,12 @@ export async function handleCronTrigger(
         // 7:00 UTC = 16:00 JST (Japan market close)
         // 22:00 UTC = 7:00 JST next day (US market close summary)
 
-        if (hour === 7 && minute === 0) {
+        const dayOfWeek = new Date().getUTCDay(); // 0 = Sunday
+
+        if (dayOfWeek === 0 && hour === 9 && minute === 0) {
+            // Sunday weekly report (18:00 JST)
+            await sendWeeklyReport(env);
+        } else if (hour === 7 && minute === 0) {
             // Japan market daily summary
             await runDailySummaryJob(env, 'JP');
         } else if (hour === 22 && minute === 0) {

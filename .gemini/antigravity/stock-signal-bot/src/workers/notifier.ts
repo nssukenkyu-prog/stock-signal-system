@@ -3,8 +3,8 @@
 // =====================================================
 
 import type { Env, SignalResult } from '../types';
-import { sendPushMessage, formatSignalMessage, formatDailySummary, formatSystemAlert } from '../utils/line';
-import { insertNotificationLog, getAllHoldings, calculateMonthlyPnL, savePortfolioSnapshot } from '../storage/d1';
+import { sendPushMessage, formatSignalMessage, formatDailySummary, formatSystemAlert, formatWeeklyReport } from '../utils/line';
+import { insertNotificationLog, getAllHoldings, calculateMonthlyPnL, savePortfolioSnapshot, getPortfolioSnapshot } from '../storage/d1';
 import {
     isInCooldown,
     setCooldown,
@@ -236,4 +236,89 @@ export async function sendTestNotification(env: Env): Promise<boolean> {
     );
 
     return response.success;
+}
+
+// =====================================================
+// Send Weekly Report (Sunday)
+// =====================================================
+
+export async function sendWeeklyReport(env: Env): Promise<void> {
+    console.log('[Notifier] Sending weekly report...');
+
+    try {
+        // Get portfolio data
+        const holdings = await getAllHoldings(env.DB);
+        const currentValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
+
+        // Get weekly snapshots
+        const today = new Date();
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - 7);
+
+        const weekStartSnap = await getPortfolioSnapshot(env.DB, weekStart.toISOString().slice(0, 10));
+        const startValue = weekStartSnap?.totalValue || currentValue;
+
+        const weeklyPnL = currentValue - startValue;
+        const weeklyPnLPercent = startValue > 0 ? (weeklyPnL / startValue) * 100 : 0;
+
+        // Monthly PnL
+        const monthlyData = await calculateMonthlyPnL(env.DB, currentValue);
+
+        // Find best/worst performers
+        let bestPerformer: { name: string; change: number } | undefined;
+        let worstPerformer: { name: string; change: number } | undefined;
+
+        for (const holding of holdings) {
+            const change = holding.avgCost > 0
+                ? ((holding.currentPrice - holding.avgCost) / holding.avgCost) * 100
+                : 0;
+
+            if (!bestPerformer || change > bestPerformer.change) {
+                bestPerformer = { name: holding.name, change };
+            }
+            if (!worstPerformer || change < worstPerformer.change) {
+                worstPerformer = { name: holding.name, change };
+            }
+        }
+
+        // Format the report
+        const message = formatWeeklyReport({
+            weekStart: weekStart.toISOString().slice(0, 10),
+            weekEnd: today.toISOString().slice(0, 10),
+            startValue,
+            endValue: currentValue,
+            weeklyPnL,
+            weeklyPnLPercent,
+            monthlyPnL: monthlyData.pnl,
+            monthlyPnLPercent: monthlyData.percent,
+            bestPerformer,
+            worstPerformer,
+            buySignalsCount: 0,  // TODO: get from signal history
+            sellSignalsCount: 0,
+            upcomingEvents: [],  // TODO: get from events table
+        });
+
+        const response = await sendPushMessage(
+            env.LINE_CHANNEL_ACCESS_TOKEN,
+            env.LINE_USER_ID,
+            message
+        );
+
+        await insertNotificationLog(
+            env.DB,
+            null,
+            'WEEKLY',
+            message,
+            response.success,
+            response.error
+        );
+
+        if (response.success) {
+            console.log('[Notifier] Weekly report sent');
+        } else {
+            console.error('[Notifier] Failed to send weekly report:', response.error);
+        }
+    } catch (error) {
+        console.error('[Notifier] Error sending weekly report:', error);
+    }
 }
