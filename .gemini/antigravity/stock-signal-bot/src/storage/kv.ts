@@ -23,6 +23,12 @@ export async function getSymbolState(kv: KVNamespace, symbolId: string): Promise
     return data ? JSON.parse(data) : null;
 }
 
+// Batch save all symbol states
+export async function saveAllSymbolStates(kv: KVNamespace, states: Record<string, SymbolState>): Promise<void> {
+    const key = `state:all`;
+    await kv.put(key, JSON.stringify(states));
+}
+
 export async function setSymbolState(kv: KVNamespace, symbolId: string, state: SymbolState): Promise<void> {
     const key = `state:${symbolId}`;
     await kv.put(key, JSON.stringify(state));

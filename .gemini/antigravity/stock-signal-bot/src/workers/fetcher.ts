@@ -4,11 +4,11 @@
 // Falls back to Yahoo Finance if needed
 // =====================================================
 
-import type { Env, Symbol } from '../types';
+import type { Env, Symbol, SymbolState } from '../types';
 import { getQuotesStooq, getHistoricalStooq, getQuoteStooq } from '../data/stooq';
 import { getQuotes as getQuotesYahoo, getUSDJPY } from '../data/yahoo-finance';
 import { getAllSymbols, getHoldingSymbolIds, insertDailyPrice, updateHoldingPrice, getDailyPrices } from '../storage/d1';
-import { setSymbolState } from '../storage/kv';
+import { setSymbolState, saveAllSymbolStates } from '../storage/kv';
 import { calculateIndicators } from '../models/indicators';
 import { formatDate } from '../utils/helpers';
 
@@ -44,6 +44,7 @@ export async function fetchAllPrices(env: Env): Promise<void> {
 
         let successCount = 0;
         let failCount = 0;
+        const allStates: Record<string, SymbolState> = {};
 
         // Fetch each symbol individually from Stooq
         for (const symbol of stockSymbols) {
@@ -71,13 +72,14 @@ export async function fetchAllPrices(env: Env): Promise<void> {
                     const allPrices = await getDailyPrices(env.DB, symbol.id, 150);
                     const indicators = allPrices.length >= 60 ? calculateIndicators(allPrices) : null;
 
-                    await setSymbolState(env.STATE, symbol.id, {
+                    // Accumulate state in memory
+                    allStates[symbol.id] = {
                         symbolId: symbol.id,
                         lastPrice: latest.close,
                         lastUpdated: new Date().toISOString(),
                         lastSignal: null,
                         indicators,
-                    });
+                    };
 
                     console.log(`[Fetcher] ✓ ${symbol.id}: ${latest.close} (${latest.date})`);
                     successCount++;
@@ -93,6 +95,12 @@ export async function fetchAllPrices(env: Env): Promise<void> {
                 console.error(`[Fetcher] Error updating ${symbol.id}:`, error);
                 failCount++;
             }
+        }
+
+        // Batch save all states to KV
+        if (Object.keys(allStates).length > 0) {
+            console.log(`[Fetcher] Saving ${Object.keys(allStates).length} symbol states to KV...`);
+            await saveAllSymbolStates(env.STATE, allStates);
         }
 
         console.log(`[Fetcher] Complete: ${successCount} success, ${failCount} failed`);
