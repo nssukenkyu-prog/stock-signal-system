@@ -1,0 +1,23 @@
+{
+    "name": "stock-signal-bot",
+    "version": "1.0.0",
+    "description": "Stock Signal Bot with Cloudflare Workers",
+    "main": "src/index.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev",
+        "cf-typegen": "wrangler types"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "hono": "^4.0.0"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20240101.0",
+        "typescript": "^5.0.0",
+        "wrangler": "^3.0.0"
+    }
+}
